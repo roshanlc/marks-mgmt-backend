@@ -6,24 +6,6 @@ The backend server for the internal exmaination records management system.
 
 This is the development branch. Create new branches from this one and merge to this after completion.
 
-## Initial Setup dependencies
-
-1. Install prettier and eslint extension in VSCode
-2. Install pnpm with `npm install -g pnpm`
-3. Run the following commands
-
-```bash
-pnpm add express
-pnpm add eslint --save-dev
-pnpm add -D nodemon
-pnpm exec eslint --init
-pnpm add prisma --save-dev
-pnpm exec prisma init --datasource-provider postgresql
-pnpm add swagger-jsdoc --save
-pnpm add swagger-ui-express --save
-
-```
-
 ### Run
 
 - Run
@@ -39,10 +21,6 @@ pnpm add swagger-ui-express --save
   ```bash
   pnpm run dev
   ```
-
-### Swagger documentation
-
-- The swagger ui is available from `/docs` endpoint
 
 ### Setting up Prisma
 
@@ -70,6 +48,8 @@ pnpm add swagger-ui-express --save
 
 ### Postgres Setup
 
+- Method - 1
+
 1. Install `docker` on your machine
 2. Pull `postgres` image
 
@@ -85,7 +65,7 @@ docker run --name psql-dev \
 -p 5432:5432 postgres
 ```
 
-- This will start a postgres instance at TCP port 5432 with username `postgres` and password `test1234`
+> This will start a postgres instance at TCP port 5432 with username `postgres` and password `test1234`
 
 4. You can access the postgres acces as such
 
@@ -95,3 +75,56 @@ psql -h localhost -U postgres
 ```
 
 5. From next time, just run `docker start psql-dev` to start the container
+
+- Method-2
+
+1. Use the `aiven.io` postgres setup
+
+### Coding Guidelines
+
+1. Explicitly define response's `status code`
+2. Explicit `return` after sending response
+3. Explicitly set return `content-type`
+
+```js
+res
+  .status(401)
+  .json(
+    errorResponse(
+      "Authentication Error",
+      "Please provide valid login credentials."
+    )
+  )
+return
+```
+
+4. Explicity set request body `content-type`
+
+## API Documentation
+
+- The swagger ui is available from `/docs` endpoint
+
+- We will be using Postman for openapi specs generation
+- Save the specs to `/src/swagger/swagger-output.json`
+- Use the specs to generate swagger ui
+  _Note: However provide enough comments about endpoint in source files as well_
+
+## Initial Setup dependencies
+
+1. Install prettier and eslint extension in VSCode
+2. Install pnpm with `npm install -g pnpm`
+3. Run the following commands
+4. Install pnpm with `npm install -g pnpm`
+5. Run the following commands
+
+```bash
+pnpm add express
+pnpm add eslint --save-dev
+pnpm add eslint --save-dev
+pnpm add -D nodemon
+pnpm exec eslint --init
+pnpm add prisma --save-dev
+pnpm exec prisma init --datasource-provider postgresql
+pnpm add swagger-ui-express --save
+pnpm add bcrypt dotenv jsonwebtoken joi
+```
