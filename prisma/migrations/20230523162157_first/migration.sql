@@ -1,26 +1,21 @@
-/*
-  Warnings:
-
-  - You are about to drop the `users` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('ACTIVE', 'DROPOUT', 'ARCHIVE');
 
--- DropTable
-DROP TABLE "users";
-
--- DropEnum
-DROP TYPE "Role";
-
 -- CreateTable
-CREATE TABLE "Permissions" (
+CREATE TABLE "Permission" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "roleId" INTEGER,
 
-    CONSTRAINT "Permissions_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RolePermissions" (
+    "roleId" INTEGER NOT NULL,
+    "permissionId" INTEGER NOT NULL,
+
+    CONSTRAINT "RolePermissions_pkey" PRIMARY KEY ("roleId","permissionId")
 );
 
 -- CreateTable
@@ -240,7 +235,7 @@ CREATE TABLE "StudentStatus" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Permissions_name_key" ON "Permissions"("name");
+CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
@@ -279,7 +274,10 @@ CREATE UNIQUE INDEX "Student_symbolNo_key" ON "Student"("symbolNo");
 CREATE UNIQUE INDEX "Student_PuRegNo_key" ON "Student"("PuRegNo");
 
 -- AddForeignKey
-ALTER TABLE "Permissions" ADD CONSTRAINT "Permissions_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "RolePermissions" ADD CONSTRAINT "RolePermissions_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolePermissions" ADD CONSTRAINT "RolePermissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

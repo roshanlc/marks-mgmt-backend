@@ -11,20 +11,29 @@ datasource db {
 }
 
 // Permissions and their corresponding actions
-model Permissions {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  description String?
-  Role        Role?   @relation(fields: [roleId], references: [id])
-  roleId      Int?
+model Permission {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique
+  description     String?
+  RolePermissions RolePermissions[]
+}
+
+// table to link role with permissions
+model RolePermissions {
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  roleId       Int
+  permissionId Int
+
+  @@id([roleId, permissionId])
 }
 
 // A role is made up of a number of permissions
 model Role {
-  id          Int           @id @default(autoincrement())
-  name        String        @unique
-  permissions Permissions[]
-  UserRoles   UserRoles[]
+  id              Int               @id @default(autoincrement())
+  name            String            @unique
+  UserRoles       UserRoles[]
+  RolePermissions RolePermissions[]
 }
 
 // Basic user details, used for login
