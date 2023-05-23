@@ -7,7 +7,9 @@ The backend server for the internal exmaination records management system.
 > This is the development branch. Create new branches from this one and merge to this after completion.
 
 ### Necessary Tools
- Make sure you have the following tools installed on your machine
+
+Make sure you have the following tools installed on your machine
+
 - Docker
 - Postman
 - Node
@@ -19,7 +21,7 @@ The backend server for the internal exmaination records management system.
   ```bash
   cp .env.example .env
   ```
-  and edit `.env` with necessary details
+  > and edit `.env` file with required details (JWT_SECRET, DATABASE_URL,...)
 - Install dependencies
   ```bash
   pnpm install
