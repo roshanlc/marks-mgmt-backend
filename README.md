@@ -4,7 +4,14 @@ The backend server for the internal exmaination records management system.
 
 ## _Note: Donot merge with main. All development works should be merged to this `development` branch_
 
-This is the development branch. Create new branches from this one and merge to this after completion.
+> This is the development branch. Create new branches from this one and merge to this after completion.
+
+### Necessary Tools
+ Make sure you have the following tools installed on your machine
+- Docker
+- Postman
+- Node
+- Vscode (extensions: Prettier, Prisma, Eslint, GitLens)
 
 ### Run
 
@@ -15,14 +22,18 @@ This is the development branch. Create new branches from this one and merge to t
   and edit `.env` with necessary details
 - Install dependencies
   ```bash
-  pnpm install --frozen-lockfile
+  pnpm install
+  ```
+- To setup database connection
+  ```bash
+  pnpm exec prisma migrate dev
   ```
 - To run locally
   ```bash
   pnpm run dev
   ```
 
-### Setting up Prisma
+### Setting up Prisma (When you update schema)
 
 1. Update the `prisma/schema.prisma` file as necessary
 2. Run `pnpm exec prisma migrate dev`
@@ -100,7 +111,7 @@ return
 
 4. Explicity set request body `content-type`
 
-## API Documentation
+## API Documentation (Donot worry about this)
 
 - The swagger ui is available from `/docs` endpoint
 
@@ -109,7 +120,7 @@ return
 - Use the specs to generate swagger ui
   _Note: However provide enough comments about endpoint in source files as well_
 
-## Initial Setup dependencies
+## Initial Setup dependencies (Donot follow this)
 
 1. Install prettier and eslint extension in VSCode
 2. Install pnpm with `npm install -g pnpm`

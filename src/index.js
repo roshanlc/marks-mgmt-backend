@@ -7,8 +7,12 @@ const parsingErrorHandler = require("./middlewares/parsing")
 const authHandler = require("./middlewares/auth")
 const swaggerUi = require("swagger-ui-express")
 const swaggerFile = require("./swagger/swagger-output.json")
+const verifyConfiguration = require("./helper/startup")
 
 dotenv.config() // load .env config
+
+// check for configuration at start
+verifyConfiguration()
 
 // enable json parsing middleware
 app.use(express.json())
