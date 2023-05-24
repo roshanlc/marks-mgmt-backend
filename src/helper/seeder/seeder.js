@@ -4,16 +4,28 @@ const { permissions, roles } = require("./permsandroles")
 // prisma client
 const db = new PrismaClient()
 
+// seed Role with specific Permissions
 async function seedRoleWithPerms() {
-  db.rolePermissions
-    .create({
-      data: {
-        permission: { name: "readPersonalMarks" },
-        role: { name: "student" },
-      },
+  try {
+    roles.forEach((role) => {
+      role.permissions.map((perm) => {
+        db.rolePermissions
+          .create({
+            data: {
+              role: { connect: { name: role.name } },
+              permission: {
+                connect: {
+                  name: perm,
+                },
+              },
+            },
+          })
+          .then((msg) => console.log(msg))
+      })
     })
-    .catch((e) => console.log(e))
-    .then((x) => console.log(x))
+  } catch (err) {
+    console.log("Something went wrong: ", err)
+  }
 }
 // seed the permissions and roles table
 async function seedPermsAndRoles() {
@@ -30,6 +42,8 @@ async function seedPermsAndRoles() {
         db.permission.createMany({ data: permissions }),
         db.role.createMany({ data: roleList }),
       ])
+
+      seedRoleWithPerms()
     }
   } catch (err) {
     console.log("Something went wrong, ", err.message)
@@ -39,39 +53,61 @@ async function seedPermsAndRoles() {
 // seedDb seeds the database basic user details
 async function seedDb() {
   const hash = hashPassword("Thisistheway")
-  await db.users
-    .createMany({
-      data: [
-        {
-          email: "teacher1@pu.edu.np",
-          password: hash,
-          activated: true,
-          expired: false,
-          role: "TEACHER",
-        },
-        {
-          email: "student1@pu.edu.np",
-          password: hash,
-          activated: true,
-          expired: false,
-          role: "STUDENT",
-        },
-        {
-          email: "admin1@pu.edu.np",
-          password: hash,
-          activated: true,
-          expired: false,
-          role: "ADMIN",
-        },
-      ],
-    })
-    .then((resp) => console.log(resp))
 
-  await db.users.findMany().then((resp) => console.log(resp))
+  const userData = [
+    {
+      email: "teacher1@pu.edu.np",
+      password: hash,
+      activated: true,
+      expired: false,
+      role: "student",
+    },
+    {
+      email: "student1@pu.edu.np",
+      password: hash,
+      activated: true,
+      expired: false,
+      role: "teacher",
+    },
+    {
+      email: "admin1@pu.edu.np",
+      password: hash,
+      activated: true,
+      expired: false,
+      role: "teacher",
+    },
+  ]
+
+  try {
+    const count = await db.user.count()
+
+    if (count > 0) return // donot seed if there are users in the system already
+
+    await db.user.createMany({
+      data: userData.map((user) => {
+        return {
+          email: user.email,
+          password: user.password,
+          activated: user.activated,
+          expired: user.expired,
+        }
+      }),
+    })
+
+    userData.forEach((user) => {
+      db.userRoles.create({
+        data: {
+          user: { connect: { email: user.email } },
+          role: { connect: { name: user.role } },
+        },
+      })
+    })
+  } catch (err) {
+    console.log("Something went wrong: ", err)
+  }
 }
 
-// seedDb() // Call the function to seed the database for test purposes
-// seedPermsAndRoles()
+seedPermsAndRoles()
+seedDb() // Call the function to seed the database for test purposes
 
-seedRoleWithPerms()
 module.exports = seedDb
