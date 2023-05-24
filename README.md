@@ -112,6 +112,7 @@ return
 ```
 
 4. Explicity set request body `content-type`
+5. A database helper function should return with `toResult()` function
 
 ## API Documentation (Donot worry about this)
 

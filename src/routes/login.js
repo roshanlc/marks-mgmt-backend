@@ -2,10 +2,11 @@ const { Router } = require("express")
 
 const router = Router()
 const Joi = require("joi")
-const errorResponse = require("../helper/error")
+const { errorResponse, responseStatusCode } = require("../helper/error")
 const { compareHash } = require("../helper/password")
 const { PrismaClient } = require("@prisma/client")
 const jwt = require("jsonwebtoken")
+const { checkLogin } = require("../db/user")
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -39,40 +40,43 @@ router.post("/login", async function (req, res) {
 
   const { email, password } = req.body
 
-  try {
-    // try to find user from provided details
-    const userDetails = await db.users.findFirst({
-      where: {
-        email: email,
-      },
-    })
-
-    // incase user does not exist or invalid password is provided
-    if (
-      userDetails === null ||
-      (userDetails !== null && !compareHash(password, userDetails.password))
-    ) {
-      res
-        .status(401)
-        .json(
-          errorResponse(
-            "Authentication Error",
-            "Please provide valid login credentials."
-          )
-        )
-      return
-    }
-
-    // generate token
-    const token = generateToken(userDetails)
-    // return response
-    res.status(200).json(loginResponse(token, userDetails))
-  } catch (err) {
-    console.log(err) // TODO: replace with proper logger
-    res
-      .status(500)
-      .json(errorResponse("Internal Server Error", "Something went wrong."))
+  const userDetails = await checkLogin(email, password)
+  if (userDetails.err !== null) {
+    res.status(responseStatusCode.get(userDetails.err.name)).json(err)
+    return
   }
+
+  const user = userDetails.result
+
+  // check for expired or inactive account
+  if (user.expired) {
+    res
+      .status(401)
+      .json(
+        errorResponse(
+          "Expired Account",
+          "The account has expired. Please contact administrator for more details."
+        )
+      )
+    return
+  } else if (user.inactive) {
+    res
+      .status(401)
+      .json(
+        errorResponse("Inactive Account", "The account has not been activated.")
+      )
+    return
+  }
+
+  // delete the password field
+  if (user.password) delete user.password
+
+  // generate token from user details
+  const token = generateToken(user)
+
+  // return response
+  res.status(200).json(loginResponse(token, user))
+  return
 })
 
 /**
@@ -83,7 +87,7 @@ router.post("/login", async function (req, res) {
 function generateToken(user) {
   // uses the default algorithm:  (HMAC SHA256)
   const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, email: user.email, UserRoles: user.UserRoles },
     JWT_SECRET,
     {
       expiresIn: "1d",
@@ -107,9 +111,7 @@ function loginResponse(token, userDetails) {
     iat: iat,
     exp: exp,
     user: {
-      id: userDetails.id,
-      email: userDetails.email,
-      role: userDetails.role,
+      ...userDetails,
     },
   }
 }

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken")
-const errorResponse = require("../helper/error")
+const { errorResponse } = require("../helper/error")
 const JWT_SECRET = process.env.JWT_SECRET
 
 /**
@@ -28,7 +28,7 @@ function authHandler(req, res, next) {
     jwt.verify(token, JWT_SECRET)
   } catch (err) {
     res
-      .status(401)
+      .status(403)
       .json(errorResponse("Unauthorized", "Missing or invalid bearer token."))
     return
   }

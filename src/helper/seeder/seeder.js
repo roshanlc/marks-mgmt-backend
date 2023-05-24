@@ -107,19 +107,23 @@ async function seedDb() {
     })
 
     userData.forEach((user) => {
-      db.userRoles.create({
-        data: {
-          user: { connect: { email: user.email } },
-          role: { connect: { name: user.role } },
-        },
-      })
+      console.log(user.email, user.role)
+      db.userRoles
+        .create({
+          data: {
+            user: { connect: { email: user.email } },
+            role: { connect: { name: user.role } },
+          },
+        })
+        .catch((err) => console.log(err))
+        .then((msg) => console.log(msg))
     })
   } catch (err) {
     console.log("Something went wrong: ", err)
   }
 }
 
-seedPermsAndRoles()
+// seedPermsAndRoles()
 seedDb() // Call the function to seed the database for test purposes
 
 module.exports = seedDb

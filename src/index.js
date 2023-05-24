@@ -8,6 +8,7 @@ const authHandler = require("./middlewares/auth")
 const swaggerUi = require("swagger-ui-express")
 const swaggerFile = require("./swagger/swagger-output.json")
 const verifyConfiguration = require("./helper/startup")
+const logger = require("./helper/logger")
 
 dotenv.config() // load .env config
 
@@ -32,5 +33,5 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 app.listen(9000, () => {
   console.log("-".repeat(75))
-  console.log("⚡Started at 9000 : ", new Date().toLocaleString())
+  logger.info("⚡Started at 9000 : ", new Date().toLocaleString())
 })
