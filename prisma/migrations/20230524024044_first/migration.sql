@@ -31,6 +31,9 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "address" TEXT,
+    "contactNo" TEXT,
     "activated" BOOLEAN NOT NULL DEFAULT false,
     "expired" BOOLEAN NOT NULL DEFAULT false,
 
@@ -171,11 +174,8 @@ CREATE TABLE "Batch" (
 -- CreateTable
 CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
     "symbolNo" TEXT NOT NULL,
     "PuRegNo" TEXT NOT NULL,
-    "address" TEXT,
-    "contactNo" TEXT,
     "semesterId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "programId" INTEGER NOT NULL,
@@ -186,9 +186,6 @@ CREATE TABLE "Student" (
 -- CreateTable
 CREATE TABLE "Teacher" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "address" TEXT,
-    "contactNo" TEXT,
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Teacher_pkey" PRIMARY KEY ("id")
@@ -197,9 +194,6 @@ CREATE TABLE "Teacher" (
 -- CreateTable
 CREATE TABLE "Admin" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "address" TEXT,
-    "contactNo" TEXT,
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")

@@ -38,12 +38,12 @@ async function seedPermsAndRoles() {
         return { name: role.name }
       })
       // Perform a db transaction
-      db.$transaction([
+      await db.$transaction([
         db.permission.createMany({ data: permissions }),
         db.role.createMany({ data: roleList }),
       ])
 
-      seedRoleWithPerms()
+      await seedRoleWithPerms()
     }
   } catch (err) {
     console.log("Something went wrong, ", err.message)
@@ -58,6 +58,9 @@ async function seedDb() {
     {
       email: "teacher1@pu.edu.np",
       password: hash,
+      name: "Balen Shah",
+      address: "Kathmandu",
+      contactNo: "",
       activated: true,
       expired: false,
       role: "student",
@@ -65,6 +68,9 @@ async function seedDb() {
     {
       email: "student1@pu.edu.np",
       password: hash,
+      name: "Ram Sharma",
+      address: "Kathmandu",
+      contactNo: "",
       activated: true,
       expired: false,
       role: "teacher",
@@ -72,6 +78,9 @@ async function seedDb() {
     {
       email: "admin1@pu.edu.np",
       password: hash,
+      name: "Kapil Sharma",
+      address: "Kathmandu",
+      contactNo: "",
       activated: true,
       expired: false,
       role: "teacher",
@@ -88,6 +97,9 @@ async function seedDb() {
         return {
           email: user.email,
           password: user.password,
+          name: user.name,
+          address: user.address,
+          contactNo: user.contactNo,
           activated: user.activated,
           expired: user.expired,
         }
