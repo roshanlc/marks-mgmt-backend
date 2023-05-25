@@ -1,57 +1,24 @@
 const { PrismaClient } = require("@prisma/client")
 const { hashPassword } = require("../password")
-const { permissions, roles } = require("./permsandroles")
+const { roles } = require("./roles")
+const logger = require("../logger")
+const verifyConfiguration = require("../startup")
 // prisma client
 const db = new PrismaClient()
 
-// seed Role with specific Permissions
-async function seedRoleWithPerms() {
+// seed the permissions and roles table
+async function seedRoles() {
   try {
-    roles.forEach((role) => {
-      role.permissions.map((perm) => {
-        db.rolePermissions
-          .create({
-            data: {
-              role: { connect: { name: role.name } },
-              permission: {
-                connect: {
-                  name: perm,
-                },
-              },
-            },
-          })
-          .then((msg) => console.log(msg))
-      })
+    await db.role.createMany({
+      data: roles,
     })
   } catch (err) {
-    console.log("Something went wrong: ", err)
-  }
-}
-// seed the permissions and roles table
-async function seedPermsAndRoles() {
-  try {
-    const permCount = await db.permission.count()
-
-    // only seed the table if empty
-    if (permCount === 0) {
-      const roleList = roles.map((role) => {
-        return { name: role.name }
-      })
-      // Perform a db transaction
-      await db.$transaction([
-        db.permission.createMany({ data: permissions }),
-        db.role.createMany({ data: roleList }),
-      ])
-
-      await seedRoleWithPerms()
-    }
-  } catch (err) {
-    console.log("Something went wrong, ", err.message)
+    logger.warn(`Something went wrong: ${err.message}`)
   }
 }
 
 // seedDb seeds the database basic user details
-async function seedDb() {
+async function seedUsers() {
   const hash = hashPassword("Thisistheway")
 
   const userData = [
@@ -63,7 +30,7 @@ async function seedDb() {
       contactNo: "",
       activated: true,
       expired: false,
-      role: "student",
+      roles: ["teacher"],
     },
     {
       email: "student1@pu.edu.np",
@@ -73,7 +40,7 @@ async function seedDb() {
       contactNo: "",
       activated: true,
       expired: false,
-      role: "teacher",
+      roles: ["student"],
     },
     {
       email: "admin1@pu.edu.np",
@@ -83,15 +50,11 @@ async function seedDb() {
       contactNo: "",
       activated: true,
       expired: false,
-      role: "teacher",
+      roles: ["admin"],
     },
   ]
 
   try {
-    const count = await db.user.count()
-
-    if (count > 0) return // donot seed if there are users in the system already
-
     await db.user.createMany({
       data: userData.map((user) => {
         return {
@@ -107,23 +70,38 @@ async function seedDb() {
     })
 
     userData.forEach((user) => {
-      console.log(user.email, user.role)
-      db.userRoles
-        .create({
-          data: {
-            user: { connect: { email: user.email } },
-            role: { connect: { name: user.role } },
-          },
-        })
-        .catch((err) => console.log(err))
-        .then((msg) => console.log(msg))
+      user.roles.forEach((role) => {
+        db.userRoles
+          .create({
+            data: {
+              user: { connect: { email: user.email } },
+              role: { connect: { name: role } },
+            },
+          })
+          .catch((err) => logger.warn(`Something went wrong: ${err}`))
+      })
     })
   } catch (err) {
-    console.log("Something went wrong: ", err)
+    logger.warn(`Something went wrong: ${err}`)
   }
 }
 
-// seedPermsAndRoles()
-seedDb() // Call the function to seed the database for test purposes
+/**
+ * seeds the database with data
+ */
+async function seedDatabase() {
+  try {
+    logger.info("The database seeding has started.")
+    // seed the roles table at first
+    await seedRoles()
+    // then seed users table
+    await seedUsers()
+  } catch (err) {
+    logger.warn(`Something went wrong: ${err.message}`)
+  }
+}
 
-module.exports = seedDb
+// verify configuration
+verifyConfiguration()
+// execute the seeding function
+seedDatabase()

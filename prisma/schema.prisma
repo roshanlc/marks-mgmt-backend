@@ -10,30 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Permissions and their corresponding actions
-model Permission {
-  id              Int               @id @default(autoincrement())
-  name            String            @unique
-  description     String?
-  RolePermissions RolePermissions[]
-}
-
-// table to link role with permissions
-model RolePermissions {
-  role         Role       @relation(fields: [roleId], references: [id])
-  permission   Permission @relation(fields: [permissionId], references: [id])
-  roleId       Int
-  permissionId Int
-
-  @@id([roleId, permissionId])
-}
-
-// A role is made up of a number of permissions
+// A role provides certain privileges to a user
 model Role {
-  id              Int               @id @default(autoincrement())
-  name            String            @unique
-  UserRoles       UserRoles[]
-  RolePermissions RolePermissions[]
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  description String?
+  UserRoles   UserRoles[]
 }
 
 // Basic user details, used for login

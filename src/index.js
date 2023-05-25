@@ -34,4 +34,7 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile))
 app.listen(9000, () => {
   console.log("-".repeat(75))
   logger.info("⚡Started at 9000 : ", new Date().toLocaleString())
+  console.log(
+    "Did you seed the database?\nRun 'pnpm run seed' to seed the database."
+  )
 })

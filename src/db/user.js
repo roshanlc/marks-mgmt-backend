@@ -20,19 +20,7 @@ async function getUserDetails(userId) {
       include: {
         UserRoles: {
           select: {
-            role: {
-              select: {
-                name: true,
-                id: true,
-                RolePermissions: {
-                  select: {
-                    permission: {
-                      select: { id: true, name: true },
-                    },
-                  },
-                },
-              },
-            },
+            role: true,
           },
         },
       },

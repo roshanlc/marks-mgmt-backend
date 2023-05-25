@@ -7,6 +7,7 @@ const { compareHash } = require("../helper/password")
 const { PrismaClient } = require("@prisma/client")
 const jwt = require("jsonwebtoken")
 const { checkLogin } = require("../db/user")
+const logger = require("../helper/logger")
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -42,7 +43,8 @@ router.post("/login", async function (req, res) {
 
   const userDetails = await checkLogin(email, password)
   if (userDetails.err !== null) {
-    res.status(responseStatusCode.get(userDetails.err.name)).json(err)
+    logger.warn(err)
+    res.status(responseStatusCode.get(userDetails.err.name) || 500).json(err)
     return
   }
 

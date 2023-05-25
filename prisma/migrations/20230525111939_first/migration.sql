@@ -2,26 +2,10 @@
 CREATE TYPE "Status" AS ENUM ('ACTIVE', 'DROPOUT', 'ARCHIVE');
 
 -- CreateTable
-CREATE TABLE "Permission" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-
-    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "RolePermissions" (
-    "roleId" INTEGER NOT NULL,
-    "permissionId" INTEGER NOT NULL,
-
-    CONSTRAINT "RolePermissions_pkey" PRIMARY KEY ("roleId","permissionId")
-);
-
--- CreateTable
 CREATE TABLE "Role" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "description" TEXT,
 
     CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
 );
@@ -229,9 +213,6 @@ CREATE TABLE "StudentStatus" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
@@ -266,12 +247,6 @@ CREATE UNIQUE INDEX "Student_symbolNo_key" ON "Student"("symbolNo");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Student_PuRegNo_key" ON "Student"("PuRegNo");
-
--- AddForeignKey
-ALTER TABLE "RolePermissions" ADD CONSTRAINT "RolePermissions_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "RolePermissions" ADD CONSTRAINT "RolePermissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
