@@ -70,9 +70,6 @@ router.post("/login", async function (req, res) {
     return
   }
 
-  // delete the password field
-  if (user.password) delete user.password
-
   // generate token from user details
   const token = generateToken(user)
 

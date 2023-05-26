@@ -26,6 +26,10 @@ async function getUserDetails(userId) {
       },
     })
 
+    // delete password field
+    if (userDetails.password) {
+      delete userDetails.password
+    }
     // return user details
     return toResult(userDetails, null)
   } catch (err) {
