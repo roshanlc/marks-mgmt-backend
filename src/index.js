@@ -9,11 +9,24 @@ const swaggerUi = require("swagger-ui-express")
 const swaggerFile = require("./swagger/swagger-output.json")
 const verifyConfiguration = require("./helper/startup")
 const logger = require("./helper/logger")
+const cors = require("cors")
+const helmet = require("helmet")
 
 dotenv.config() // load .env config
 
 // check for configuration at start
 verifyConfiguration()
+
+// Add cors support
+app.use(
+  cors({
+    preflightContinue: true,
+    origin: "*",
+  })
+)
+
+// Helmet prevents from sending response headers with explicit info
+app.use(helmet())
 
 // enable json parsing middleware
 app.use(express.json())
