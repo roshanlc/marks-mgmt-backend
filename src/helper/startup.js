@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client")
+const logger = require("./logger")
 
 /**
  * Checks for db connection at startup
@@ -8,8 +9,8 @@ function checkDbConnection() {
   // check for db connection
   // and exit the process if any error occurs
   db.$connect().catch((err) => {
-    console.log(`Db connection error: ${err.message}`)
-    console.log("Please fix errors and run the program again.")
+    logger.warn(`Db connection error: ${err.message}`)
+    logger.warn("Please fix errors and run the program again.")
     process.exit(1)
   })
 }
@@ -23,10 +24,10 @@ function verifyConfiguration() {
 
   for (let i = 0; i < configs.length; i++) {
     if (!(configs[i] in process.env)) {
-      console.log(
+      logger.warn(
         `${configs[i]} is not set in ".env" file. Please set it and run again.`
       )
-      console.log(`The program will not exit.`)
+      logger.warn(`The program will not exit.`)
       process.exit(1)
     }
   }

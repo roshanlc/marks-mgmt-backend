@@ -11,6 +11,7 @@ const verifyConfiguration = require("./helper/startup")
 const logger = require("./helper/logger")
 const cors = require("cors")
 const helmet = require("helmet")
+const profileRouter = require("./routes/profile")
 
 dotenv.config() // load .env config
 
@@ -35,6 +36,8 @@ app.use(express.json())
 app.use(parsingErrorHandler)
 
 app.use("/api/v1", loginRouter)
+
+app.use("/api/v1", authHandler, profileRouter)
 
 // A basic endpoint to verify token validity
 // TODO: remove after project completion

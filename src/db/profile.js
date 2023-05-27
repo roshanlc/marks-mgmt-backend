@@ -19,20 +19,25 @@ async function getProfileDetails(userId) {
       return profile
     }
 
-    console.log(profile.result) // TODO: remove this later
-
     // loop over user roles array
-    // extract details for "student" and "teacher" roles
-    // TODO: extraction process in progress
+    // extract "roles"
     for (const roleObj of profile.result.UserRoles) {
       if (roleObj.role.name === "student") {
-        const studentDetails = await db.student.findFirstOrThrow({
-          where: { userId: profile.result.id },
-        })
+        const studentDetails = await getStudentDetails(profile.result.id)
+        // Append to the user details object
 
-        console.log("stud:", studentDetails) // TODO: remove this later
+        profile.result.student = studentDetails
+      } else if (roleObj.role.name === "teacher") {
+        const teacherDetails = await getTeacherDetails(profile.result.id)
+
+        profile.result.teacher = teacherDetails
       }
     }
+
+    // TODO: add support for other profile types (dept head, program head,...)
+
+    // return profile details
+    return profile
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (
@@ -50,7 +55,28 @@ async function getProfileDetails(userId) {
   }
 }
 
-const tryOut = async () => {
-  console.log(await getProfileDetails(2))
+/**
+ * It provides complete details about a student
+ * Courses taken, marks for current semester
+ * @param {Number} userId
+ */
+async function getStudentDetails(userId) {
+  // TODO: add more details about student such as courses taken
+  return await db.student.findFirstOrThrow({
+    where: { userId: userId },
+  })
 }
-tryOut()
+
+/**
+ * It provides complete details about a teacher
+ * Courses taught and other details for current semester
+ * @param {Number} userId
+ */
+async function getTeacherDetails(userId) {
+  // TODO: add more details about teacher such as courses taught
+  return await db.teacher.findFirstOrThrow({
+    where: { userId: userId },
+  })
+}
+
+module.exports = { getProfileDetails }
