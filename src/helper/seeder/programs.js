@@ -1,6 +1,6 @@
 const semesters = [1, 2, 3, 4, 5, 6, 7, 8]
 
-const level = ["Bachelor", "Master"]
+const level = [{ name: "Bachelor" }, { name: "Master" }]
 const faculties = [
   {
     name: "Faculty of Science and Technology",
@@ -43,3 +43,12 @@ const programSemesters = [
   { program: "Software Engineering", level: "Bachelor", semester: 8 },
   { program: "Civil Engineering", level: "Bachelor", semester: 8 },
 ]
+
+module.exports = {
+  departments,
+  programs,
+  programSemesters,
+  faculties,
+  level,
+  semesters,
+}
