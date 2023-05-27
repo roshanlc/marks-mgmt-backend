@@ -87,13 +87,12 @@ model Program {
 
 // A semester i.e 1,2,3,...N
 model Semester {
-  id                        Int                @id @default(autoincrement())
-  Syllabus                  Syllabus[]
-  RunningSemesters          RunningSemesters[]
-  ProgramSemesters          ProgramSemesters?  @relation(fields: [programSemestersProgramId], references: [programId])
-  programSemestersProgramId Int?
-  ProgramCourses            ProgramCourses[]
-  Student                   Student[]
+  id               Int                @id @default(autoincrement())
+  Syllabus         Syllabus[]
+  RunningSemesters RunningSemesters[]
+  ProgramCourses   ProgramCourses[]
+  Student          Student[]
+  ProgramSemesters ProgramSemesters[]
 }
 
 // A syllabus is for a semester of a program
@@ -110,11 +109,12 @@ model Syllabus {
 // total number of semesters a program has
 // B.E Computer has 8 semesters, Arch has 10 semesters
 model ProgramSemesters {
-  program   Program    @relation(fields: [programId], references: [id])
-  semester  Semester[]
-  programId Int        @unique
+  program        Program  @relation(fields: [programId], references: [id])
+  programId      Int      @unique
+  totalSemesters Semester @relation(fields: [semesterId], references: [id])
+  semesterId     Int
 
-  @@id([programId])
+  @@id([programId, semesterId])
 }
 
 // Currently running semesters of a program

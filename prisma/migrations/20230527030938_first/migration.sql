@@ -73,7 +73,6 @@ CREATE TABLE "Program" (
 -- CreateTable
 CREATE TABLE "Semester" (
     "id" SERIAL NOT NULL,
-    "programSemestersProgramId" INTEGER,
 
     CONSTRAINT "Semester_pkey" PRIMARY KEY ("id")
 );
@@ -91,8 +90,9 @@ CREATE TABLE "Syllabus" (
 -- CreateTable
 CREATE TABLE "ProgramSemesters" (
     "programId" INTEGER NOT NULL,
+    "semesterId" INTEGER NOT NULL,
 
-    CONSTRAINT "ProgramSemesters_pkey" PRIMARY KEY ("programId")
+    CONSTRAINT "ProgramSemesters_pkey" PRIMARY KEY ("programId","semesterId")
 );
 
 -- CreateTable
@@ -264,9 +264,6 @@ ALTER TABLE "Program" ADD CONSTRAINT "Program_departmentId_fkey" FOREIGN KEY ("d
 ALTER TABLE "Program" ADD CONSTRAINT "Program_levelId_fkey" FOREIGN KEY ("levelId") REFERENCES "Level"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Semester" ADD CONSTRAINT "Semester_programSemestersProgramId_fkey" FOREIGN KEY ("programSemestersProgramId") REFERENCES "ProgramSemesters"("programId") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Syllabus" ADD CONSTRAINT "Syllabus_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -274,6 +271,9 @@ ALTER TABLE "Syllabus" ADD CONSTRAINT "Syllabus_semesterId_fkey" FOREIGN KEY ("s
 
 -- AddForeignKey
 ALTER TABLE "ProgramSemesters" ADD CONSTRAINT "ProgramSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProgramSemesters" ADD CONSTRAINT "ProgramSemesters_semesterId_fkey" FOREIGN KEY ("semesterId") REFERENCES "Semester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RunningSemesters" ADD CONSTRAINT "RunningSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
