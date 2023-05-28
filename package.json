@@ -2,12 +2,12 @@
   "name": "internal-examination-records-backend",
   "version": "0.0.1",
   "description": "The backend for internal examination records management system.",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
     "lint": "eslint src --ext js --report-unused-disable-directives --max-warnings 0",
-    "lint-fix": "eslint src --fix --ext js --report-unused-disable-directives --max-warnings 0"
+    "lint-fix": "eslint src --fix --ext js --report-unused-disable-directives --max-warnings 0",
+    "start": "NODE_ENV=production node src/index.js"
   },
   "engines": {
     "node": ">=16"
@@ -18,7 +18,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0"
   },
   "devDependencies": {
     "eslint": "^8.40.0",
