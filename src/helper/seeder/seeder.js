@@ -95,7 +95,7 @@ async function seedUsers() {
       contactNo: "",
       activated: true,
       expired: false,
-      roles: ["admin"],
+      roles: ["admin", "teacher"],
     },
   ]
 
