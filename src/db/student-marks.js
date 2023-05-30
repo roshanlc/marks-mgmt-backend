@@ -248,7 +248,7 @@ async function getStudentMarksByCourse(
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (
-      err instanceof Prisma.PrismaClientKnownRequestError ||
+      err instanceof Prisma.PrismaClientKnownRequestError &&
       err.name === "NotFoundError"
     ) {
       return toResult(null, errorResponse("Not Found", err.message))

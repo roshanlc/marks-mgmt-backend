@@ -49,7 +49,7 @@ function forbiddenError() {
  */
 function NotFoundError(msg = "") {
   return errorResponse(
-    "Not Found Error",
+    "Not Found",
     msg === "" ? "The request entity could not be found." : msg
   )
 }

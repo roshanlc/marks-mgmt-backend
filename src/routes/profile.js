@@ -14,7 +14,7 @@ router.get("/profile", async function (req, res) {
   // check for errors
   if (profile.err !== null) {
     res
-      .status(responseStatusCode.get(profile.err.name) || 500)
+      .status(responseStatusCode.get(profile.err.error.title) || 500)
       .json(profile.err)
     return
   }

@@ -34,7 +34,7 @@ router.get("/marks", async function (req, res) {
 
   if (studentId.err !== null) {
     res
-      .status(responseStatusCode.get(marks.err.title) || 400)
+      .status(responseStatusCode.get(marks.err.error.title) || 400)
       .json(studentId.err)
     return
   }
@@ -44,7 +44,7 @@ router.get("/marks", async function (req, res) {
     const marks = await marksDB.getStudentMarks(studentId.result.id)
     if (marks.err !== null) {
       res
-        .status(responseStatusCode.get(marks.err.title) || 400)
+        .status(responseStatusCode.get(marks.err.error.title) || 400)
         .json(studentId.err)
       return
     }
@@ -70,7 +70,7 @@ router.get("/marks", async function (req, res) {
 
     if (marks.err !== null) {
       res
-        .status(responseStatusCode.get(marks.err.title) || 400)
+        .status(responseStatusCode.get(marks.err.error.title) || 400)
         .json(studentId.err)
       return
     }
@@ -88,7 +88,9 @@ router.get("/marks", async function (req, res) {
   )
 
   if (marks.err !== null) {
-    res.status(responseStatusCode.get(marks.err.title) || 400).json(marks.err)
+    res
+      .status(responseStatusCode.get(marks.err.error.title) || 400)
+      .json(marks.err)
     return
   }
 
