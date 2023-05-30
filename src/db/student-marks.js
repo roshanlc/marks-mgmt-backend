@@ -105,6 +105,7 @@ async function getStudentMarks(studentId) {
  * @returns all the marks of a student for a semester
  */
 async function getStudentMarksBySemester(studentId, semesterId) {
+  // TODO: ADD logic-  when a semester greater than program's max semester is given
   try {
     // fetch student details
     const studentDetails = await db.student.findFirstOrThrow({
@@ -247,7 +248,7 @@ async function getStudentMarksByCourse(
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err instanceof Prisma.PrismaClientKnownRequestError ||
       err.name === "NotFoundError"
     ) {
       return toResult(null, errorResponse("Not Found", err.message))

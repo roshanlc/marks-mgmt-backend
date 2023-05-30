@@ -13,6 +13,7 @@ const cors = require("cors")
 const helmet = require("helmet")
 const profileRouter = require("./routes/profile")
 const studentMarksRouter = require("./routes/student-marks")
+const studentRoleHandler = require("./middlewares/student-role")
 
 dotenv.config() // load .env config
 
@@ -40,7 +41,7 @@ app.use("/api/v1", loginRouter)
 
 app.use("/api/v1", authHandler, profileRouter)
 
-app.use("/api/v1", authHandler, studentMarksRouter)
+app.use("/api/v1", authHandler, studentRoleHandler, studentMarksRouter)
 
 // A basic endpoint to verify token validity
 // TODO: remove after project completion

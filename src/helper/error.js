@@ -43,6 +43,17 @@ function forbiddenError() {
   )
 }
 
+/**
+ * Returns a error for 404 error
+ * @returns Not Found Error
+ */
+function NotFoundError(msg = "") {
+  return errorResponse(
+    "Not Found Error",
+    msg === "" ? "The request entity could not be found." : msg
+  )
+}
+
 // map of error title and corresponding status code
 const responseStatusCode = new Map()
   .set("Authentication Error", 401)
@@ -59,4 +70,5 @@ module.exports = {
   responseStatusCode,
   forbiddenError,
   internalServerError,
+  NotFoundError,
 }
