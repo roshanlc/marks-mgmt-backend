@@ -88,7 +88,6 @@ model Program {
 // A semester i.e 1,2,3,...N
 model Semester {
   id               Int                @id @default(autoincrement())
-  Syllabus         Syllabus[]
   RunningSemesters RunningSemesters[]
   ProgramCourses   ProgramCourses[]
   Student          Student[]
@@ -99,11 +98,10 @@ model Semester {
 model Syllabus {
   id             Int              @id @default(autoincrement())
   program        Program          @relation(fields: [programId], references: [id])
-  semester       Semester         @relation(fields: [semesterId], references: [id])
   name           String? // to provide title such as old syllabus or current one
   programId      Int
-  semesterId     Int
   ProgramCourses ProgramCourses[]
+  Student        Student[]
 }
 
 // total number of semesters a program has
@@ -197,15 +195,16 @@ model Student {
   symbolNo String @unique
   PuRegNo  String @unique
 
-  semester Semester @relation(fields: [semesterId], references: [id])
-  user     User     @relation(fields: [userId], references: [id])
-  program  Program  @relation(fields: [programId], references: [id])
-
+  semester      Semester        @relation(fields: [semesterId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
+  program       Program         @relation(fields: [programId], references: [id])
+  syllabus      Syllabus        @relation(fields: [syllabusId], references: [id])
   semesterId    Int
   userId        Int
   StudentMarks  StudentMarks[]
   programId     Int
   StudentStatus StudentStatus[]
+  syllabusId    Int
 }
 
 // Details about  a teacher
@@ -237,7 +236,7 @@ model StudentMarks {
 
   studentId Int
   courseId  Int
-  teacherId Int
+  teacherId Int?
 
   @@id([studentId, courseId])
 }

@@ -82,7 +82,6 @@ CREATE TABLE "Syllabus" (
     "id" SERIAL NOT NULL,
     "name" TEXT,
     "programId" INTEGER NOT NULL,
-    "semesterId" INTEGER NOT NULL,
 
     CONSTRAINT "Syllabus_pkey" PRIMARY KEY ("id")
 );
@@ -163,6 +162,7 @@ CREATE TABLE "Student" (
     "semesterId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "programId" INTEGER NOT NULL,
+    "syllabusId" INTEGER NOT NULL,
 
     CONSTRAINT "Student_pkey" PRIMARY KEY ("id")
 );
@@ -267,9 +267,6 @@ ALTER TABLE "Program" ADD CONSTRAINT "Program_levelId_fkey" FOREIGN KEY ("levelI
 ALTER TABLE "Syllabus" ADD CONSTRAINT "Syllabus_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Syllabus" ADD CONSTRAINT "Syllabus_semesterId_fkey" FOREIGN KEY ("semesterId") REFERENCES "Semester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "ProgramSemesters" ADD CONSTRAINT "ProgramSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -310,6 +307,9 @@ ALTER TABLE "Student" ADD CONSTRAINT "Student_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Student" ADD CONSTRAINT "Student_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Student" ADD CONSTRAINT "Student_syllabusId_fkey" FOREIGN KEY ("syllabusId") REFERENCES "Syllabus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Teacher" ADD CONSTRAINT "Teacher_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

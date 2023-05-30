@@ -13,6 +13,7 @@ Make sure you have the following tools installed on your machine
 - Docker
 - Postman
 - Node
+- Pnpm
 - Vscode (extensions: Prettier, Prisma, Eslint, GitLens)
 
 ### Run
@@ -24,7 +25,7 @@ Make sure you have the following tools installed on your machine
   > and edit `.env` file with required details (JWT_SECRET, DATABASE_URL,...)
 - Install dependencies
   ```bash
-  pnpm install
+  npm install -g pnpm && pnpm install
   ```
 - To setup database connection
   ```bash

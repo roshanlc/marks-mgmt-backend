@@ -32,17 +32,31 @@ function internalServerError() {
   return errorResponse("Internal Server Error", "Something went wrong")
 }
 
+/**
+ * Returns a error response due to lack of permissions
+ * @returns Forbidden Error
+ */
+function forbiddenError() {
+  return errorResponse(
+    "Forbidden Error",
+    "You donot have enough permission to access this endpoint."
+  )
+}
+
 // map of error title and corresponding status code
 const responseStatusCode = new Map()
   .set("Authentication Error", 401)
+  .set("Unauthorized", 401)
   .set("Bad Request", 400)
   .set("Not Found", 404)
   .set("OK", 200)
   .set("Internal Server Error", 500)
+  .set("Forbidden Error", 403)
 
 module.exports = {
   errorResponse,
   authenticationError,
   responseStatusCode,
+  forbiddenError,
   internalServerError,
 }

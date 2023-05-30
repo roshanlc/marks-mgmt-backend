@@ -63,7 +63,7 @@ async function seedUsers() {
     {
       email: "teacher1@pu.edu.np",
       password: hash,
-      name: "Balen Shah",
+      name: "Teacher Sharma",
       address: "Kathmandu",
       contactNo: "",
       activated: true,
@@ -73,7 +73,7 @@ async function seedUsers() {
     {
       email: "student1@pu.edu.np",
       password: hash,
-      name: "Ram Sharma",
+      name: "Student Sharma",
       address: "Kathmandu",
       contactNo: "",
       activated: true,
@@ -90,7 +90,7 @@ async function seedUsers() {
     {
       email: "admin1@pu.edu.np",
       password: hash,
-      name: "Kapil Sharma",
+      name: "Admin Sharma",
       address: "Kathmandu",
       contactNo: "",
       activated: true,
