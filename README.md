@@ -5,6 +5,7 @@ The backend server for the internal exmaination records management system.
 ## _Note: Donot merge with main. All development works should be merged to this `development` branch_
 
 > This is the development branch. Create new branches from this one and merge to this after completion.
+> `main` branch is used for pushing codes to hosting ,i.e `production`
 
 ### Necessary Tools
 
@@ -56,7 +57,7 @@ Make sure you have the following tools installed on your machine
     ├── db -> Where the db related files will be stored
     ├── index.js -> entry point for the node
     ├── middlewares -> Where the middlewares will stored
-    └── routes -> Where the routes will be stored
+    └── routes -> Where the routes(controllers) will be stored
 
 ```
 
@@ -123,23 +124,3 @@ return
 - Save the specs to `/src/swagger/swagger-output.json`
 - Use the specs to generate swagger ui
   _Note: However provide enough comments about endpoint in source files as well_
-
-## Initial Setup dependencies (Donot follow this)
-
-1. Install prettier and eslint extension in VSCode
-2. Install pnpm with `npm install -g pnpm`
-3. Run the following commands
-4. Install pnpm with `npm install -g pnpm`
-5. Run the following commands
-
-```bash
-pnpm add express
-pnpm add eslint --save-dev
-pnpm add eslint --save-dev
-pnpm add -D nodemon
-pnpm exec eslint --init
-pnpm add prisma --save-dev
-pnpm exec prisma init --datasource-provider postgresql
-pnpm add swagger-ui-express --save
-pnpm add bcrypt dotenv jsonwebtoken joi
-```
