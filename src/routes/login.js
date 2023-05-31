@@ -42,8 +42,10 @@ router.post("/login", async function (req, res) {
 
   const userDetails = await checkLogin(email, password)
   if (userDetails.err !== null) {
-    logger.warn(err)
-    res.status(responseStatusCode.get(userDetails.err.name) || 500).json(err)
+    logger.warn(userDetails.err)
+    res
+      .status(responseStatusCode.get(userDetails.err.error.title) || 500)
+      .json(err)
     return
   }
 

@@ -44,7 +44,7 @@ async function getUserDetails(userId) {
       )
     } else {
       logger.warn(`getUserDetails(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -71,7 +71,7 @@ async function checkLogin(email, password) {
       userDetails === null ||
       (userDetails !== null && !compareHash(password, userDetails.password))
     ) {
-      return toResult(null, authenticationError)
+      return toResult(null, authenticationError())
     }
 
     // return user details by id
@@ -81,10 +81,10 @@ async function checkLogin(email, password) {
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.name === "NotFoundError"
     ) {
-      return toResult(null, authenticationError)
+      return toResult(null, authenticationError())
     } else {
       logger.warn(`checkLogin(): ${err.message}`)
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -111,7 +111,7 @@ async function getStudentId(userId) {
       return toResult(null, NotFoundError(err.message))
     } else {
       logger.warn(`getStudentId(): ${err.message}`)
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -141,7 +141,7 @@ async function getTeacherId(userId) {
       return toResult(null, NotFoundError(err.message))
     } else {
       logger.warn(`getStudentId(): ${err.message}`)
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -171,7 +171,7 @@ async function getAdminId(userId) {
       return toResult(null, NotFoundError(err.message))
     } else {
       logger.warn(`getStudentId(): ${err.message}`)
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
