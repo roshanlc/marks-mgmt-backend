@@ -3,15 +3,11 @@ const { Router } = require("express")
 const router = Router()
 const Joi = require("joi")
 const { errorResponse, responseStatusCode } = require("../helper/error")
-const { PrismaClient } = require("@prisma/client")
 const jwt = require("jsonwebtoken")
 const { checkLogin } = require("../db/user")
 const logger = require("../helper/logger")
 
 const JWT_SECRET = process.env.JWT_SECRET
-
-// prisma client
-const db = new PrismaClient()
 
 // Replace the '"' from the string
 function escapeColon(msg) {

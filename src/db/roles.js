@@ -1,7 +1,7 @@
 /**
  * This module contains method related to fetching roles of a user
  */
-const { PrismaClient, Prisma } = require("@prisma/client")
+const { PrismaClient } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../helper/logger")
 const { errorResponse, internalServerError } = require("../helper/error")

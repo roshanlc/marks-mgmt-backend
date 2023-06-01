@@ -41,7 +41,29 @@ const programs = [
 const programSemesters = [
   { program: "Computer Engineering", level: "Bachelor", semester: 8 },
   { program: "Software Engineering", level: "Bachelor", semester: 8 },
-  { program: "Civil Engineering", level: "Bachelor", semester: 8 },
+]
+
+const programSyllabus = [
+  {
+    name: "Old syllalbus",
+    program: "Computer Engineering",
+    level: "Bachelor",
+  },
+  {
+    name: "New syllalbus",
+    program: "Computer Engineering",
+    level: "Bachelor",
+  },
+  {
+    name: "Old syllalbus",
+    program: "Software Engineering",
+    level: "Bachelor",
+  },
+  {
+    name: "New syllalbus",
+    program: "Software Engineering",
+    level: "Bachelor",
+  },
 ]
 
 module.exports = {
@@ -51,4 +73,5 @@ module.exports = {
   faculties,
   level,
   semesters,
+  programSyllabus,
 }
