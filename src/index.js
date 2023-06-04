@@ -15,6 +15,8 @@ const profileRouter = require("./routes/profile")
 const studentMarksRouter = require("./routes/student-marks")
 const studentRoleHandler = require("./middlewares/student-role")
 const tokenValidationHandler = require("./routes/tokens")
+const teacherRoleHandler = require("./middlewares/teacher-role")
+const teacherCoursesRouter = require("./routes/teacher-courses")
 
 dotenv.config() // load .env config
 
@@ -38,12 +40,19 @@ app.use(express.json())
 // use the json parsing error handling middleware
 app.use(parsingErrorHandler)
 
-app.use("/api/v1", loginRouter)
-app.use("/api/v1", authHandler, tokenValidationHandler)
+app.use("/api/v1/login", loginRouter)
+app.use("/api/v1/tokens", authHandler, tokenValidationHandler)
 
-app.use("/api/v1", authHandler, profileRouter)
+app.use("/api/v1/profile", authHandler, profileRouter)
 
-app.use("/api/v1", authHandler, studentRoleHandler, studentMarksRouter)
+app.use("/api/v1/students", authHandler, studentRoleHandler, studentMarksRouter)
+
+app.use(
+  "/api/v1/teachers",
+  authHandler,
+  teacherRoleHandler,
+  teacherCoursesRouter
+)
 
 // A basic endpoint to verify token validity
 // TODO: remove after project completion

@@ -24,7 +24,7 @@ const loginSchema = Joi.object({
 // Endpoint for user authentication
 // Returns JWT token if successfull
 // otherwise appropriate error response
-router.post("/login", async function (req, res) {
+router.post("", async function (req, res) {
   // validate the request body
   const err = loginSchema.validate(req.body).error
 

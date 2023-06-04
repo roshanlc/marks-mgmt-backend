@@ -79,4 +79,4 @@ async function getTeacherDetails(userId) {
   })
 }
 
-module.exports = { getProfileDetails }
+module.exports = { getProfileDetails, getStudentDetails, getTeacherDetails }

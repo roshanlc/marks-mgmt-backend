@@ -8,7 +8,7 @@ const { internalServerError } = require("../helper/error")
 // Endpoint for user token validation
 // Returns the same JWT token if valid
 // otherwise appropriate error response
-router.post("/tokens/validate", async function (req, res) {
+router.post("/validate", async function (req, res) {
   try {
     const authHeader = req.headers.authorization
     const token = authHeader.substring(7, authHeader.length)

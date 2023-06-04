@@ -83,6 +83,7 @@ model Program {
   ProgramSemesters ProgramSemesters[]
   ProgramCourses   ProgramCourses[]
   Student          Student[]
+  TeacherCourses   TeacherCourses[]
 }
 
 // A semester i.e 1,2,3,...N
@@ -190,7 +191,7 @@ model Batch {
 }
 
 // Season of the year
-enum Season{
+enum Season {
   FALL
   SPRING
   WINTER
@@ -254,12 +255,14 @@ model TeacherCourses {
   teacher Teacher @relation(fields: [teacherId], references: [id])
   course  Course  @relation(fields: [courseId], references: [id])
   batch   Batch   @relation(fields: [batchId], references: [id])
+  program Program @relation(fields: [programId], references: [id])
 
   teacherId Int
   courseId  Int
   batchId   Int
+  programId Int
 
-  @@id([teacherId, courseId, batchId])
+  @@id([teacherId, courseId, programId, batchId])
 }
 
 // Possible status of a student

@@ -7,7 +7,7 @@ const router = Router()
 const { extractTokenDetails } = require("../helper/extract-token")
 const { responseStatusCode } = require("../helper/error")
 
-router.get("/profile", async function (req, res) {
+router.get("", async function (req, res) {
   const tokenDetails = extractTokenDetails(req)
   const profile = await getProfileDetails(tokenDetails.id)
 

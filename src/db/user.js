@@ -124,7 +124,7 @@ async function getStudentId(userId) {
 async function getTeacherId(userId) {
   try {
     // try to find user by id
-    const studentId = await db.student.findFirstOrThrow({
+    const studentId = await db.teacher.findFirstOrThrow({
       where: {
         user: { id: userId },
       },
@@ -140,7 +140,7 @@ async function getTeacherId(userId) {
     ) {
       return toResult(null, NotFoundError(err.message))
     } else {
-      logger.warn(`getStudentId(): ${err.message}`)
+      logger.warn(`getTeacherId(): ${err.message}`)
       return toResult(null, internalServerError())
     }
   }
@@ -170,7 +170,7 @@ async function getAdminId(userId) {
     ) {
       return toResult(null, NotFoundError(err.message))
     } else {
-      logger.warn(`getStudentId(): ${err.message}`)
+      logger.warn(`getAdmin(): ${err.message}`)
       return toResult(null, internalServerError())
     }
   }

@@ -34,7 +34,7 @@ router.get("/marks", async function (req, res) {
 
   if (studentId.err !== null) {
     res
-      .status(responseStatusCode.get(marks.err.error.title) || 400)
+      .status(responseStatusCode.get(studentId.err.error.title) || 400)
       .json(studentId.err)
     return
   }
@@ -50,7 +50,7 @@ router.get("/marks", async function (req, res) {
     }
 
     // return marks of a student
-    res.status(200).send(marks.result)
+    res.status(200).json(marks.result)
     return
   }
 
@@ -76,7 +76,7 @@ router.get("/marks", async function (req, res) {
     }
 
     // return marks of a student
-    res.status(200).send(marks.result)
+    res.status(200).json(marks.result)
     return
   }
 
@@ -95,7 +95,7 @@ router.get("/marks", async function (req, res) {
   }
 
   // return marks of a student
-  res.status(200).send(marks.result)
+  res.status(200).json(marks.result)
   return
 })
 
