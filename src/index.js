@@ -14,6 +14,7 @@ const helmet = require("helmet")
 const profileRouter = require("./routes/profile")
 const studentMarksRouter = require("./routes/student-marks")
 const studentRoleHandler = require("./middlewares/student-role")
+const tokenValidationHandler = require("./routes/tokens")
 
 dotenv.config() // load .env config
 
@@ -38,6 +39,7 @@ app.use(express.json())
 app.use(parsingErrorHandler)
 
 app.use("/api/v1", loginRouter)
+app.use("/api/v1", authHandler, tokenValidationHandler)
 
 app.use("/api/v1", authHandler, profileRouter)
 

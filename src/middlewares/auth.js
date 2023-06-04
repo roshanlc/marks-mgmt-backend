@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET
  * @param {*} next Next function to pass the request onto
  * @returns
  */
-// Authorization middleware
+// Authentication middleware
 // Checks if request contain auth header
 // and whether the bearer token is valid
 function authHandler(req, res, next) {
@@ -28,7 +28,7 @@ function authHandler(req, res, next) {
     jwt.verify(token, JWT_SECRET)
   } catch (err) {
     res
-      .status(403)
+      .status(401)
       .json(errorResponse("Unauthorized", "Missing or invalid bearer token."))
     return
   }
