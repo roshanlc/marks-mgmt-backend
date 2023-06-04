@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "Season" AS ENUM ('FALL', 'SPRING', 'WINTER', 'SUMMER');
+
+-- CreateEnum
 CREATE TYPE "Status" AS ENUM ('ACTIVE', 'DROPOUT', 'ARCHIVE');
 
 -- CreateTable
@@ -149,7 +152,7 @@ CREATE TABLE "ProgramCourses" (
 CREATE TABLE "Batch" (
     "id" SERIAL NOT NULL,
     "year" INTEGER NOT NULL,
-    "season" TEXT NOT NULL,
+    "season" "Season" NOT NULL,
 
     CONSTRAINT "Batch_pkey" PRIMARY KEY ("id")
 );
@@ -190,7 +193,7 @@ CREATE TABLE "StudentMarks" (
     "NotQualified" BOOLEAN NOT NULL DEFAULT false,
     "studentId" INTEGER NOT NULL,
     "courseId" INTEGER NOT NULL,
-    "teacherId" INTEGER NOT NULL,
+    "teacherId" INTEGER,
 
     CONSTRAINT "StudentMarks_pkey" PRIMARY KEY ("studentId","courseId")
 );
@@ -324,7 +327,7 @@ ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_studentId_fkey" FOREIGN 
 ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

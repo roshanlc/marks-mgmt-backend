@@ -184,9 +184,17 @@ model ProgramCourses {
 model Batch {
   id               Int                @id @default(autoincrement())
   year             Int
-  season           String
+  season           Season
   RunningSemesters RunningSemesters[]
   TeacherCourses   TeacherCourses[]
+}
+
+// Season of the year
+enum Season{
+  FALL
+  SPRING
+  WINTER
+  SUMMER
 }
 
 // Details about a student
