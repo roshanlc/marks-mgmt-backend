@@ -63,6 +63,7 @@ const responseStatusCode = new Map()
   .set("OK", 200)
   .set("Internal Server Error", 500)
   .set("Forbidden Error", 403)
+  .set("Conflict", 409)
 
 module.exports = {
   errorResponse,

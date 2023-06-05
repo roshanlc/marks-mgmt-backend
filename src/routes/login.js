@@ -6,13 +6,9 @@ const { errorResponse, responseStatusCode } = require("../helper/error")
 const jwt = require("jsonwebtoken")
 const { checkLogin } = require("../db/user")
 const logger = require("../helper/logger")
+const { escapeColon } = require("../helper/utils")
 
 const JWT_SECRET = process.env.JWT_SECRET
-
-// Replace the '"' from the string
-function escapeColon(msg) {
-  return msg.replaceAll('"', "")
-}
 
 // schema for the login payload
 const loginSchema = Joi.object({

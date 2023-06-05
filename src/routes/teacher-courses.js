@@ -1,17 +1,31 @@
 /**
- * This module contains controllers for teacher's courses related
+ * This module contains controllers for teacher's courses related endpoints
  */
 const { Router } = require("express")
 const router = Router()
 const { extractTokenDetails } = require("../helper/extract-token")
-const { responseStatusCode } = require("../helper/error")
+const {
+  responseStatusCode,
+  errorResponse,
+  internalServerError,
+} = require("../helper/error")
 const userDB = require("../db/user")
-const { getTeacherCourses } = require("../db/teacher-courses")
+const {
+  getTeacherCourses,
+  isTaughtBy,
+  addMarks,
+} = require("../db/teacher-courses")
+const Joi = require("joi")
+const { escapeColon } = require("../helper/utils")
+const { getStudentDetails } = require("../db/profile")
+const logger = require("../helper/logger")
+const { toResult } = require("../helper/result")
+const { Prisma } = require("@prisma/client")
 
-// Endpoint for student fetch their marks
+// Endpoint for teacher to fetch courses they teach
 router.get("/courses", async function (req, res) {
   const tokenDetails = extractTokenDetails(req)
-  // get student id
+  // get teacher id
   const teacherId = await userDB.getTeacherId(tokenDetails.id)
 
   if (teacherId.err !== null) {
@@ -32,6 +46,94 @@ router.get("/courses", async function (req, res) {
 
   // return courses taught by a teacher
   res.status(200).json(teacherCourses.result)
+  return
+})
+
+const addMarksSchema = Joi.object({
+  studentId: Joi.number().min(0).required(),
+  theory: Joi.number().min(0).required(),
+  practical: Joi.number().min(0).required(),
+  courseId: Joi.number().min(0).required(),
+  notQualified: Joi.boolean().default(false).required(),
+})
+
+// Endpoint for student fetch their marks
+router.post("/addmarks", async function (req, res) {
+  const tokenDetails = extractTokenDetails(req)
+  // get teacher id
+  const teacherId = await userDB.getTeacherId(tokenDetails.id)
+
+  if (teacherId.err !== null) {
+    res
+      .status(responseStatusCode.get(teacherId.err.error.title) || 400)
+      .json(teacherId.err)
+    return
+  }
+
+  const err = addMarksSchema.validate(req.body).error
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  // request body json
+  const details = req.body
+
+  let studentDetails = {}
+  // get student details (programId)
+  try {
+    studentDetails = await getStudentDetails(0, details.studentId)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      res
+        .status(404)
+        .json(errorResponse("Not Found", "Please provide valid student id."))
+      return
+    } else {
+      logger.warn(err.message) // Always log cases for internal server error
+      res.status(500).json(internalServerError())
+      return
+    }
+  }
+
+  // does this teacher teache the course taught by the student
+  const teaches = await isTaughtBy(
+    teacherId.result.id,
+    studentDetails.programId,
+    details.courseId
+  )
+
+  if (teaches.err !== null) {
+    res
+      .status(responseStatusCode.get(teaches.err.error.title) || 400)
+      .json(teaches.err)
+    return
+  }
+
+  // Now add the marks
+
+  const marksAddition = await addMarks(
+    teacherId.result.id,
+    details.studentId,
+    details.courseId,
+    details.theory,
+    details.practical,
+    details.notQualified
+  )
+
+  if (marksAddition.err !== null && marksAddition.err !== undefined) {
+    res
+      .status(responseStatusCode.get(marksAddition.err.error.title) || 400)
+      .json(marksAddition.err)
+    return
+  }
+
+  // successfully created resource
+  res.status(201).json(marksAddition.result)
   return
 })
 

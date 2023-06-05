@@ -60,10 +60,10 @@ async function getProfileDetails(userId) {
  * Courses taken, marks for current semester
  * @param {Number} userId
  */
-async function getStudentDetails(userId) {
+async function getStudentDetails(userId = 0, studentId = 0) {
   // TODO: add more details about student such as courses taken
   return await db.student.findFirstOrThrow({
-    where: { userId: userId },
+    where: { OR: [{ userId: userId }, { id: studentId }] },
   })
 }
 
@@ -72,10 +72,10 @@ async function getStudentDetails(userId) {
  * Courses taught and other details for current semester
  * @param {Number} userId
  */
-async function getTeacherDetails(userId) {
+async function getTeacherDetails(userId = 0, teacherId = 0) {
   // TODO: add more details about teacher such as courses taught
   return await db.teacher.findFirstOrThrow({
-    where: { userId: userId },
+    where: { OR: [{ userId: userId }, { id: teacherId }] },
   })
 }
 
