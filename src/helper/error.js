@@ -54,6 +54,14 @@ function NotFoundError(msg = "") {
   )
 }
 
+/**
+ * Returns a error for invalid request
+ * @returns Bad Request
+ */
+function badRequestError(msg = "") {
+  return errorResponse("Bad Request", msg === "" ? "Invalid request body" : msg)
+}
+
 // map of error title and corresponding status code
 const responseStatusCode = new Map()
   .set("Authentication Error", 401)
@@ -72,4 +80,5 @@ module.exports = {
   forbiddenError,
   internalServerError,
   NotFoundError,
+  badRequestError,
 }

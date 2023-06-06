@@ -203,7 +203,7 @@ enum Season {
 model Student {
   id       Int    @id @default(autoincrement())
   symbolNo String @unique
-  PuRegNo  String @unique
+  puRegNo  String @unique
 
   semester      Semester        @relation(fields: [semesterId], references: [id])
   user          User            @relation(fields: [userId], references: [id])

@@ -161,7 +161,7 @@ CREATE TABLE "Batch" (
 CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
     "symbolNo" TEXT NOT NULL,
-    "PuRegNo" TEXT NOT NULL,
+    "puRegNo" TEXT NOT NULL,
     "semesterId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "programId" INTEGER NOT NULL,
@@ -194,6 +194,7 @@ CREATE TABLE "StudentMarks" (
     "studentId" INTEGER NOT NULL,
     "courseId" INTEGER NOT NULL,
     "teacherId" INTEGER,
+    "batchId" INTEGER NOT NULL,
 
     CONSTRAINT "StudentMarks_pkey" PRIMARY KEY ("studentId","courseId")
 );
@@ -250,7 +251,7 @@ CREATE UNIQUE INDEX "ElectiveCourse_name_key" ON "ElectiveCourse"("name");
 CREATE UNIQUE INDEX "Student_symbolNo_key" ON "Student"("symbolNo");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Student_PuRegNo_key" ON "Student"("PuRegNo");
+CREATE UNIQUE INDEX "Student_puRegNo_key" ON "Student"("puRegNo");
 
 -- AddForeignKey
 ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -329,6 +330,9 @@ ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_courseId_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
