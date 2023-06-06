@@ -39,7 +39,7 @@ function internalServerError() {
 function forbiddenError() {
   return errorResponse(
     "Forbidden Error",
-    "You donot have enough permission to access this endpoint."
+    "You do not have enough permissions to perform this operation."
   )
 }
 
@@ -50,7 +50,7 @@ function forbiddenError() {
 function NotFoundError(msg = "") {
   return errorResponse(
     "Not Found",
-    msg === "" ? "The request entity could not be found." : msg
+    msg === "" ? "The requested entity could not be found." : msg
   )
 }
 

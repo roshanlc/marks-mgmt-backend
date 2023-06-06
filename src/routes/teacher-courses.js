@@ -8,18 +8,19 @@ const {
   responseStatusCode,
   errorResponse,
   internalServerError,
+  forbiddenError,
 } = require("../helper/error")
 const userDB = require("../db/user")
 const {
   getTeacherCourses,
   isTaughtBy,
-  addMarks,
+  addMarksByTeacher,
+  viewMarksByTeacher,
 } = require("../db/teacher-courses")
 const Joi = require("joi")
 const { escapeColon } = require("../helper/utils")
 const { getStudentDetails } = require("../db/profile")
 const logger = require("../helper/logger")
-const { toResult } = require("../helper/result")
 const { Prisma } = require("@prisma/client")
 
 // Endpoint for teacher to fetch courses they teach
@@ -57,7 +58,7 @@ const addMarksSchema = Joi.object({
   notQualified: Joi.boolean().default(false).required(),
 })
 
-// Endpoint for student fetch their marks
+// Endpoint for teacher to add marks of a student for a course
 router.post("/addmarks", async function (req, res) {
   const tokenDetails = extractTokenDetails(req)
   // get teacher id
@@ -114,9 +115,14 @@ router.post("/addmarks", async function (req, res) {
     return
   }
 
+  // check if the course is taught by this teacher
+  if (!teaches.result) {
+    res.status(403).json(forbiddenError())
+    return
+  }
   // Now add the marks
 
-  const marksAddition = await addMarks(
+  const marksAddition = await addMarksByTeacher(
     teacherId.result.id,
     details.studentId,
     details.courseId,
@@ -134,6 +140,58 @@ router.post("/addmarks", async function (req, res) {
 
   // successfully created resource
   res.status(201).json(marksAddition.result)
+  return
+})
+
+// Endpoint for teacher to view marks of all students for a course
+router.get("/marks", async function (req, res) {
+  const courseId = Number(req.query.course_id) || 0
+  const programId = Number(req.query.program_id) || 0
+  if (courseId === 0 || programId === 0) {
+    res
+      .status(400)
+      .json(errorResponse("Bad Request", "Insufficient request parameters."))
+    return
+  }
+  const tokenDetails = extractTokenDetails(req)
+  // get teacher id
+  const teacherId = await userDB.getTeacherId(tokenDetails.id)
+
+  if (teacherId.err !== null) {
+    res
+      .status(responseStatusCode.get(teacherId.err.error.title) || 400)
+      .json(teacherId.err)
+    return
+  }
+
+  // does this teacher teach this course
+  const teaches = await isTaughtBy(teacherId.result.id, programId, courseId)
+
+  if (teaches.err !== null) {
+    res
+      .status(responseStatusCode.get(teaches.err.error.title) || 400)
+      .json(teaches.err)
+    return
+  }
+  // check if the course is taught by this teacher
+  if (!teaches.result) {
+    res.status(403).json(forbiddenError())
+    return
+  }
+
+  const marks = await viewMarksByTeacher(
+    teacherId.result.id,
+    courseId,
+    programId
+  )
+  if (marks.err !== null) {
+    res
+      .status(responseStatusCode.get(marks.err.error.title) || 400)
+      .json(marks.err)
+    return
+  }
+
+  res.status(200).json(marks.result)
   return
 })
 

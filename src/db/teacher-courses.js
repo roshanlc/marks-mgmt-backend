@@ -8,6 +8,7 @@ const logger = require("../helper/logger")
 const { errorResponse, internalServerError } = require("../helper/error")
 const { toResult } = require("../helper/result")
 const { getLatestBatch } = require("./others")
+const { NotFoundError } = require("../helper/error")
 
 /**
  * Get courses taught by a teacher
@@ -129,7 +130,7 @@ async function isTaughtBy(
  * @param {Boolean} NotQualified
  * @returns added marks object if successfull or error incase of failure
  */
-async function addMarks(
+async function addMarksByTeacher(
   teacherId = 0,
   studentId,
   courseId,
@@ -180,4 +181,67 @@ async function addMarks(
   }
 }
 
-module.exports = { getTeacherCourses, isTaughtBy, addMarks }
+/**
+ * View marks by teacher of all students for a course they teach
+ * @param {Number} teacherId
+ * @param {Number} courseId
+ * @param {Number} programId
+ */
+async function viewMarksByTeacher(teacherId, courseId, programId) {
+  try {
+    const latestBatch = await getLatestBatch()
+    if (latestBatch.err !== null) {
+      return latestBatch
+    }
+
+    const teaches = await isTaughtBy(teacherId, programId, courseId)
+    // return err
+    if (teaches.err !== null) {
+      return teaches
+    }
+
+    if (!teaches) {
+      toResult(
+        null,
+        NotFoundError("Unable to find records of provided details")
+      )
+    }
+
+    // retrieve marks
+    const marks = await db.studentMarks.findMany({
+      where: {
+        AND: [
+          { courseId: courseId },
+          { teacherId: teacherId },
+          { batchId: latestBatch.result.id },
+        ],
+      },
+      include: {
+        student: { include: { user: { select: { name: true } } } },
+      },
+    })
+
+    return toResult({ marks: marks }, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "Please provide valid details.")
+      )
+    } else {
+      logger.warn(`viewMarksByTeacher(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+module.exports = {
+  getTeacherCourses,
+  isTaughtBy,
+  addMarksByTeacher,
+  viewMarksByTeacher,
+}

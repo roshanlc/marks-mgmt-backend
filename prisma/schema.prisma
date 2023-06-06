@@ -188,6 +188,7 @@ model Batch {
   season           Season
   RunningSemesters RunningSemesters[]
   TeacherCourses   TeacherCourses[]
+  StudentMarks     StudentMarks[]
 }
 
 // Season of the year
@@ -239,6 +240,7 @@ model StudentMarks {
   student      Student  @relation(fields: [studentId], references: [id])
   course       Course   @relation(fields: [courseId], references: [id])
   teacher      Teacher? @relation(fields: [teacherId], references: [id])
+  batch        Batch    @relation(fields: [batchId], references: [id])
   theory       Int?
   practical    Int?
   NotQualified Boolean  @default(false)
@@ -246,6 +248,7 @@ model StudentMarks {
   studentId Int
   courseId  Int
   teacherId Int?
+  batchId   Int
 
   @@id([studentId, courseId])
 }
