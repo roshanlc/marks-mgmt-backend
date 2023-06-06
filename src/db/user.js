@@ -10,6 +10,7 @@ const {
 const logger = require("../helper/logger")
 const { compareHash } = require("../helper/password")
 const { authenticationError, NotFoundError } = require("../helper/error")
+const { assignRoleToUser } = require("./roles")
 
 /**
  * Get user details
@@ -243,7 +244,7 @@ async function addUser(
         )
       )
     } else {
-      logger.warn(`addUser(): ${err.code}`) // Always log cases for internal server error
+      logger.warn(`addUser(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())
     }
   }
@@ -310,7 +311,17 @@ async function addStudentWithUser(
       },
     })
 
+    const roleAssign = await assignRoleToUser(user.result.id, "student")
+    if (roleAssign.err !== null) {
+      return roleAssign
+    }
+
     // valid user creation operation
+    if (user.password) {
+      delete user.password
+    }
+    student.user = user.result
+    student.user.UserRoles = roleAssign.result
     return toResult(student, null)
   } catch (err) {
     if (
@@ -330,7 +341,79 @@ async function addStudentWithUser(
         badRequestError(`Something wrong with the data. ${err.message}`)
       )
     } else {
-      logger.warn(`addStudentWithUser(): ${err.code}`) // Always log cases for internal server error
+      logger.warn(`addStudentWithUser(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Creates teacher entry along with corresponding user entry
+ * @returns
+ */
+async function addTeacherWithUser(
+  email,
+  password,
+  name,
+  address = "",
+  contactNo = "",
+  activated = true,
+  expired = false
+) {
+  try {
+    // TODO: check for invalid input
+
+    // create as a transaction
+    const user = await addUser(
+      email,
+      password,
+      name,
+      address,
+      contactNo,
+      activated,
+      expired
+    )
+    if (user.err !== null) {
+      return user
+    }
+
+    const teacher = await db.teacher.create({
+      data: {
+        userId: user.result.id,
+      },
+    })
+
+    const roleAssign = await assignRoleToUser(user.result.id, "teacher")
+    if (roleAssign.err !== null) {
+      return roleAssign
+    }
+
+    // valid user creation operation
+    if (user.password) {
+      delete user.password
+    }
+    teacher.user = user.result
+    teacher.user.UserRoles = roleAssign.result
+    return toResult(teacher, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`addStudentWithUser(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())
     }
   }
@@ -344,4 +427,5 @@ module.exports = {
   getTeacherId,
   addUser,
   addStudentWithUser,
+  addTeacherWithUser,
 }

@@ -1,10 +1,14 @@
 /**
  * This module contains method related to fetching roles of a user
  */
-const { PrismaClient } = require("@prisma/client")
+const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../helper/logger")
-const { errorResponse, internalServerError } = require("../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  badRequestError,
+} = require("../helper/error")
 const { toResult } = require("../helper/result")
 
 /**
@@ -62,4 +66,44 @@ async function hasRole(userId, role) {
   return toResult(false, null)
 }
 
-module.exports = { getUserRoles, hasRole }
+/**
+ * Asign a role to user
+ * @param {*} userId
+ * @param {*} roleName
+ * @returns
+ */
+async function assignRoleToUser(userId, roleName) {
+  try {
+    // get role roleId
+    const roleId = await db.role.findUnique({ where: { name: roleName } })
+
+    const roleAssigned = await db.userRoles.create({
+      data: { userId: userId, roleId: roleId.id },
+    })
+
+    return toResult(roleAssigned, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`assignRoleToUser(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+module.exports = { getUserRoles, hasRole, assignRoleToUser }
