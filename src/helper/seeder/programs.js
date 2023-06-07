@@ -45,22 +45,22 @@ const programSemesters = [
 
 const programSyllabus = [
   {
-    name: "Old syllalbus",
+    name: "Computer Old Syllabus",
     program: "Computer Engineering",
     level: "Bachelor",
   },
   {
-    name: "New syllalbus",
+    name: "Computer New Syllabus",
     program: "Computer Engineering",
     level: "Bachelor",
   },
   {
-    name: "Old syllalbus",
+    name: "Software Old Syllabus",
     program: "Software Engineering",
     level: "Bachelor",
   },
   {
-    name: "New syllalbus",
+    name: "Software New Syllabus",
     program: "Software Engineering",
     level: "Bachelor",
   },

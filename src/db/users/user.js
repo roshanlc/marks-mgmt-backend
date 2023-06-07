@@ -299,6 +299,7 @@ async function addStudentWithUser(
       return user
     }
 
+    // add new student
     const student = await db.student.create({
       data: {
         symbolNo: symbolNo,
