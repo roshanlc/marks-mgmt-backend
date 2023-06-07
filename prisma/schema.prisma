@@ -1,0 +1,285 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// A role provides certain privileges to a user
+model Role {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  description String?
+  UserRoles   UserRoles[]
+}
+
+// Basic user details, used for login
+model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  password  String
+  name      String
+  address   String?
+  contactNo String?
+  activated Boolean     @default(false)
+  expired   Boolean     @default(false)
+  UserRoles UserRoles[]
+  Student   Student[]
+  Teacher   Teacher[]
+  Admin     Admin[]
+}
+
+// Table to map users with their roles
+model UserRoles {
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  role   Role @relation(fields: [roleId], references: [id])
+  roleId Int
+
+  @@id([userId, roleId])
+}
+
+// A faculty 
+model Faculty {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  head       String?
+  Department Department[]
+}
+
+// A department falls under certain faculty
+model Department {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  head      String?
+  faculty   Faculty   @relation(fields: [facultyId], references: [id])
+  facultyId Int
+  Program   Program[]
+}
+
+// level .i.e bachelors , masters
+model Level {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  Program Program[]
+}
+
+// A program falls under a department and a level 
+model Program {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique
+  head             String?
+  department       Department         @relation(fields: [departmentId], references: [id])
+  level            Level              @relation(fields: [levelId], references: [id])
+  departmentId     Int
+  levelId          Int
+  Syllabus         Syllabus[]
+  RunningSemesters RunningSemesters[]
+  ProgramSemesters ProgramSemesters[]
+  ProgramCourses   ProgramCourses[]
+  Student          Student[]
+  TeacherCourses   TeacherCourses[]
+}
+
+// A semester i.e 1,2,3,...N
+model Semester {
+  id               Int                @id @default(autoincrement())
+  RunningSemesters RunningSemesters[]
+  ProgramCourses   ProgramCourses[]
+  Student          Student[]
+  ProgramSemesters ProgramSemesters[]
+}
+
+// A syllabus is for a semester of a program
+model Syllabus {
+  id             Int              @id @default(autoincrement())
+  program        Program          @relation(fields: [programId], references: [id])
+  name           String? // to provide title such as old syllabus or current one
+  programId      Int
+  ProgramCourses ProgramCourses[]
+  Student        Student[]
+}
+
+// total number of semesters a program has
+// B.E Computer has 8 semesters, Arch has 10 semesters
+model ProgramSemesters {
+  program        Program  @relation(fields: [programId], references: [id])
+  programId      Int      @unique
+  totalSemesters Semester @relation(fields: [semesterId], references: [id])
+  semesterId     Int
+
+  @@id([programId, semesterId])
+}
+
+// Currently running semesters of a program
+// During one time of a year, only odd semesters are running
+model RunningSemesters {
+  program  Program  @relation(fields: [programId], references: [id])
+  semester Semester @relation(fields: [semesterId], references: [id])
+  batch    Batch    @relation(fields: [batchId], references: [id])
+
+  programId  Int
+  semesterId Int
+  batchId    Int
+
+  @@id([programId, semesterId, batchId])
+}
+
+model MarkWeightage {
+  id        Int      @id @default(autoincrement())
+  theory    Int
+  practical Int
+  Course    Course[]
+}
+
+// Basic course details
+model Course {
+  id              Int              @id @default(autoincrement())
+  code            String?          @unique
+  name            String
+  credit          Int
+  elective        Boolean          @default(false)
+  project         Boolean          @default(false)
+  markWeightage   MarkWeightage?   @relation(fields: [markWeightageId], references: [id])
+  ElectiveCourse  ElectiveCourse[]
+  ProgramCourses  ProgramCourses[]
+  markWeightageId Int?
+  StudentMarks    StudentMarks[]
+  TeacherCourses  TeacherCourses[]
+}
+
+// Elective course
+// Is linked to a regular course
+// i.e an elective for 8th semesters has multiple choices
+model ElectiveCourse {
+  id       Int    @id @default(autoincrement())
+  code     String @unique
+  name     String @unique
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
+}
+
+// Courses that fall under a certain program (semester and syllabus)
+model ProgramCourses {
+  program    Program  @relation(fields: [programId], references: [id])
+  semester   Semester @relation(fields: [semesterId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+  syllabus   Syllabus @relation(fields: [syllabusId], references: [id])
+  programId  Int
+  semesterId Int
+  courseId   Int
+  syllabusId Int
+
+  @@id([programId, semesterId, syllabusId, courseId])
+}
+
+// TODO: Qn: How to wrap a certain batch run with running semester, teacher courses, and other stuffs????
+
+// Batch allows to define a certain season of year
+// 2022 Fall, 2022 Spring, so on..
+model Batch {
+  id               Int                @id @default(autoincrement())
+  year             Int
+  season           Season
+  RunningSemesters RunningSemesters[]
+  TeacherCourses   TeacherCourses[]
+  StudentMarks     StudentMarks[]
+}
+
+// Season of the year
+enum Season {
+  FALL
+  SPRING
+  WINTER
+  SUMMER
+}
+
+// Details about a student
+model Student {
+  id       Int    @id @default(autoincrement())
+  symbolNo String @unique
+  puRegNo  String @unique
+
+  semester      Semester        @relation(fields: [semesterId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
+  program       Program         @relation(fields: [programId], references: [id])
+  syllabus      Syllabus        @relation(fields: [syllabusId], references: [id])
+  semesterId    Int
+  userId        Int
+  StudentMarks  StudentMarks[]
+  programId     Int
+  StudentStatus StudentStatus[]
+  syllabusId    Int
+}
+
+// Details about  a teacher
+model Teacher {
+  id             Int              @id @default(autoincrement())
+  user           User             @relation(fields: [userId], references: [id])
+  userId         Int
+  StudentMarks   StudentMarks[]
+  TeacherCourses TeacherCourses[]
+}
+
+// detail about a role
+
+model Admin {
+  id   Int  @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+
+  userId Int
+}
+
+// Student and marks in a certain subject
+model StudentMarks {
+  student      Student  @relation(fields: [studentId], references: [id])
+  course       Course   @relation(fields: [courseId], references: [id])
+  teacher      Teacher? @relation(fields: [teacherId], references: [id])
+  batch        Batch    @relation(fields: [batchId], references: [id])
+  theory       Int?
+  practical    Int?
+  NotQualified Boolean  @default(false)
+
+  studentId Int
+  courseId  Int
+  teacherId Int?
+  batchId   Int
+
+  @@id([studentId, courseId])
+}
+
+// Teacher and courses taught in a batch
+model TeacherCourses {
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  course  Course  @relation(fields: [courseId], references: [id])
+  batch   Batch   @relation(fields: [batchId], references: [id])
+  program Program @relation(fields: [programId], references: [id])
+
+  teacherId Int
+  courseId  Int
+  batchId   Int
+  programId Int
+
+  @@id([teacherId, courseId, programId, batchId])
+}
+
+// Possible status of a student
+enum Status {
+  ACTIVE // currently reading student
+  DROPOUT // stopped attending college
+  ARCHIVE // 8th semesters have passed
+}
+
+// Status of an individual student
+model StudentStatus {
+  student   Student @relation(fields: [studentId], references: [id])
+  status    Status
+  studentId Int
+
+  @@id([studentId, status])
+}
