@@ -27,13 +27,33 @@ verifyConfiguration()
 // Add cors support
 app.use(
   cors({
-    preflightContinue: true,
     origin: "*",
   })
 )
-
-// Helmet prevents from sending response headers with explicit info
 app.use(helmet())
+
+app.options("*", cors())
+
+app.use(helmet())
+
+// TODO: proper CSP policy required
+/*
+const connectSrcUrls = [
+  // Add your allowed URLs here
+  "'self'",
+  "http://localhost:9000",
+  "http://localhost:5173",
+]
+
+Helmet prevents from sending response headers with explicit info
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      connectSrcUrls,
+    },
+  })
+) 
+*/
 
 // enable json parsing middleware
 app.use(express.json())
