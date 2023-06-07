@@ -17,6 +17,7 @@ const studentRoleHandler = require("./middlewares/student-role")
 const tokenValidationHandler = require("./routes/tokens")
 const teacherRoleHandler = require("./middlewares/teacher-role")
 const teacherCoursesRouter = require("./routes/teacher-courses")
+const publicInfoRouter = require("./routes/public")
 
 dotenv.config() // load .env config
 
@@ -41,6 +42,9 @@ app.use(express.json())
 app.use(parsingErrorHandler)
 
 app.use("/api/v1/login", loginRouter)
+
+app.use("/api/v1/public", publicInfoRouter)
+
 app.use("/api/v1/tokens", authHandler, tokenValidationHandler)
 
 app.use("/api/v1/profile", authHandler, profileRouter)
@@ -56,7 +60,7 @@ app.use(
 
 // A basic endpoint to verify token validity
 // TODO: remove after project completion
-app.use("/api/v1", authHandler, authDemoRouter)
+app.use("/api/v1/auth", authHandler, authDemoRouter)
 
 // Swagger documentation
 // Keep it at the end

@@ -55,4 +55,189 @@ async function getLatestBatch() {
   }
 }
 
-module.exports = { addBatch, getLatestBatch }
+/**
+ * @returns All the faculties
+ */
+async function getFaculties() {
+  try {
+    const faculties = await db.faculty.findMany()
+    return toResult(faculties, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getFaculties(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * @returns specific faculty
+ */
+async function getFacultyById(facultyId = 0, facultyName = "") {
+  try {
+    const faculty = await db.faculty.findFirstOrThrow({
+      where: { OR: [{ id: facultyId }, { name: facultyName }] },
+    })
+    return toResult(faculty, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No entry found in the faculty table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getFacultyById(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * Get all departments
+ * @returns All the departments
+ */
+async function getDepartments() {
+  try {
+    const departments = await db.department.findMany({
+      include: { faculty: true, Program: { include: { level: true } } },
+    })
+    return toResult(departments, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getDepartments(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * Get department by id
+ * @returns specific department
+ */
+async function getDepartmentById(deptId = 0, deptName = "") {
+  try {
+    const faculty = await db.department.findFirstOrThrow({
+      where: { OR: [{ id: deptId }, { name: deptName }] },
+      include: { faculty: true, Program: { include: { level: true } } },
+    })
+    return toResult(faculty, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No entry found in the faculty table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getDepartmentById(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * Get all programs
+ * @returns All the programs
+ */
+async function getPrograms() {
+  try {
+    const programs = await db.program.findMany({
+      include: {
+        department: { include: { faculty: true } },
+        level: true,
+        ProgramCourses: true,
+        ProgramSemesters: true,
+      },
+    })
+    return toResult(programs, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getPrograms(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * Get department by id
+ * @returns specific department
+ */
+async function getProgramById(programId = 0, programName = "") {
+  try {
+    const program = await db.program.findFirstOrThrow({
+      where: { OR: [{ id: programId }, { name: programName }] },
+      include: {
+        department: { include: { faculty: true } },
+        level: true,
+        ProgramCourses: true,
+        ProgramSemesters: true,
+      },
+    })
+    return toResult(program, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No entry found in the faculty table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getProgramById(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+module.exports = {
+  addBatch,
+  getLatestBatch,
+  getDepartmentById,
+  getDepartments,
+  getFaculties,
+  getFacultyById,
+  getProgramById,
+  getPrograms,
+}
