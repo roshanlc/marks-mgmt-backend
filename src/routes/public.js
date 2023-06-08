@@ -18,6 +18,8 @@ const {
   getDepartmentById,
   getPrograms,
   getProgramById,
+  getSyllabusById,
+  getAllSyllabus,
 } = require("../db/others")
 
 //get all faculties
@@ -105,6 +107,36 @@ router.get("/programs/:id", async function (req, res) {
   }
 
   res.status(200).json(program.result)
+  return
+})
+
+//get all syllabus
+router.get("/syllabus", async function (req, res) {
+  const syallbus = await getAllSyllabus()
+  if (syallbus.err !== null) {
+    res
+      .status(responseStatusCode(syallbus.err.error.title) || 400)
+      .json(syallbus.err)
+    return
+  }
+
+  res.status(200).json(syallbus.result)
+  return
+})
+
+//get an individual syllabus
+router.get("/syllabus/:id", async function (req, res) {
+  const { id } = req.params
+
+  const syallbus = await getSyllabusById(Number(id) || 0)
+  if (syallbus.err !== null) {
+    res
+      .status(responseStatusCode.get(syallbus.err.error.title) || 400)
+      .json(syallbus.err)
+    return
+  }
+
+  res.status(200).json(syallbus.result)
   return
 })
 

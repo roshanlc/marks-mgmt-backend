@@ -232,6 +232,63 @@ async function getProgramById(programId = 0, programName = "") {
   }
 }
 
+/**
+ * Get all syllabus
+ * @returns All the syllabus
+ */
+async function getAllSyllabus() {
+  try {
+    const syllabus = await db.syllabus.findMany({
+      include: { program: { include: { department: true, level: true } } },
+    })
+    return toResult(syllabus, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getAllSyallabus(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * Get syallbus by id
+ * @returns specific syllabus details
+ */
+async function getSyllabusById(syallabusId = 0, syallabusName = "") {
+  try {
+    const program = await db.syllabus.findFirstOrThrow({
+      where: { OR: [{ id: syallabusId }, { name: syallabusName }] },
+      include: { program: { include: { department: true, level: true } } },
+    })
+    return toResult(program, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No entry found in the syallbus table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getSyllabusById(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
 module.exports = {
   addBatch,
   getLatestBatch,
@@ -241,4 +298,6 @@ module.exports = {
   getFacultyById,
   getProgramById,
   getPrograms,
+  getAllSyllabus,
+  getSyllabusById,
 }
