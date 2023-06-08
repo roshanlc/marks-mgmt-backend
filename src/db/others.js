@@ -176,6 +176,7 @@ async function getPrograms() {
         level: true,
         ProgramCourses: true,
         ProgramSemesters: true,
+        RunningSemesters: true,
       },
     })
     return toResult(programs, null)
