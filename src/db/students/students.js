@@ -82,4 +82,46 @@ async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
   }
 }
 
-module.exports = { listAllStudents, listStudentsBy }
+/**
+ * Returns a specific student's details
+ * @param {Number} userId - id from user table
+ * @param {Number} studentId - id from student table
+ * @returns A student's detail or corresponding error
+ */
+async function getAStudentDetails(userId = 0, studentId = 0) {
+  try {
+    const student = await db.student.findFirstOrThrow({
+      where: { OR: [{ userId: userId }, { id: studentId }] },
+      include: {
+        program: { select: { department: true, level: true } },
+        user: { select: { id: true, name: true } },
+        syllabus: true,
+      },
+    })
+
+    return toResult({ student: student }, null)
+  } catch (err) {
+    // check for Known erorr explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          "Please provide valid user id or student id."
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`listAllStudents(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+module.exports = { listAllStudents, listStudentsBy, getAStudentDetails }

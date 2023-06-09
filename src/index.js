@@ -13,11 +13,15 @@ const cors = require("cors")
 const helmet = require("helmet")
 const profileRouter = require("./routes/profile/profile")
 const studentMarksRouter = require("./routes/student/student-marks")
-const studentRoleHandler = require("./middlewares/student-role")
+const {
+  adminRoleHandler,
+  teacherRoleHandler,
+  studentRoleHandler,
+} = require("./middlewares/roles-handler")
 const tokenValidationHandler = require("./routes/auth/tokens")
-const teacherRoleHandler = require("./middlewares/teacher-role")
 const teacherCoursesRouter = require("./routes/teacher/teacher-courses")
 const publicInfoRouter = require("./routes/public/public")
+const listStudentsRouter = require("./routes/admin/list-students")
 
 dotenv.config() // load .env config
 
@@ -55,6 +59,11 @@ app.use(
 ) 
 */
 
+// Global logger for each request
+app.use((req, res, next) => {
+  logger.info(`${req.method} : ${req.url}`)
+  next()
+})
 // enable json parsing middleware
 app.use(express.json())
 
@@ -70,6 +79,13 @@ app.use("/api/v1/tokens", authHandler, tokenValidationHandler)
 app.use("/api/v1/profile", authHandler, profileRouter)
 
 app.use("/api/v1/students", authHandler, studentRoleHandler, studentMarksRouter)
+
+app.use(
+  "/api/v1/admin/students",
+  authHandler,
+  adminRoleHandler,
+  listStudentsRouter
+)
 
 app.use(
   "/api/v1/teachers",
@@ -88,8 +104,9 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 app.listen(9000, () => {
   console.log("-".repeat(75))
-  logger.info("⚡Started at 9000 : ", new Date().toLocaleString())
+  logger.info("⚡ Started at :9000 ")
   console.log(
-    "Did you seed the database?\nRun 'pnpm run seed' to seed the database."
+    "Did you seed the database?\nRun 'pnpm run seed' to seed the database.",
+    "\nIf you are using remote database, no need to perform this operation."
   )
 })

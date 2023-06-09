@@ -5,6 +5,7 @@ const logger = require("../../helper/logger")
 const { errorResponse, internalServerError } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 const { getUserDetails } = require("./user")
+const { getAStudentDetails } = require("../students/students")
 
 /**
  * Returns profile details
@@ -23,10 +24,13 @@ async function getProfileDetails(userId) {
     // extract "roles"
     for (const roleObj of profile.result.UserRoles) {
       if (roleObj.role.name === "student") {
-        const studentDetails = await getStudentDetails(profile.result.id)
+        const studentDetails = await getAStudentDetails(profile.result.id)
+        if (studentDetails.err !== null) {
+          return studentDetails
+        }
         // Append to the user details object
 
-        profile.result.student = studentDetails
+        profile.result.student = studentDetails.result.student
       } else if (roleObj.role.name === "teacher") {
         const teacherDetails = await getTeacherDetails(profile.result.id)
 
@@ -56,18 +60,6 @@ async function getProfileDetails(userId) {
 }
 
 /**
- * It provides complete details about a student
- * Courses taken, marks for current semester
- * @param {Number} userId
- */
-async function getStudentDetails(userId = 0, studentId = 0) {
-  // TODO: add more details about student such as courses taken
-  return await db.student.findFirstOrThrow({
-    where: { OR: [{ userId: userId }, { id: studentId }] },
-  })
-}
-
-/**
  * It provides complete details about a teacher
  * Courses taught and other details for current semester
  * @param {Number} userId
@@ -79,4 +71,4 @@ async function getTeacherDetails(userId = 0, teacherId = 0) {
   })
 }
 
-module.exports = { getProfileDetails, getStudentDetails, getTeacherDetails }
+module.exports = { getProfileDetails, getTeacherDetails }

@@ -19,9 +19,9 @@ const {
 } = require("../../db/teachers/teacher-courses")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
-const { getStudentDetails } = require("../../db/users/profile")
 const logger = require("../../helper/logger")
 const { Prisma } = require("@prisma/client")
+const { getAStudentDetails } = require("../../db/students/students")
 
 // Endpoint for teacher to fetch courses they teach
 router.get("/courses", async function (req, res) {
@@ -81,24 +81,14 @@ router.post("/addmarks", async function (req, res) {
   // request body json
   const details = req.body
 
-  let studentDetails = {}
   // get student details (programId)
-  try {
-    studentDetails = await getStudentDetails(0, details.studentId)
-  } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.name === "NotFoundError"
-    ) {
-      res
-        .status(404)
-        .json(errorResponse("Not Found", "Please provide valid student id."))
-      return
-    } else {
-      logger.warn(err.message) // Always log cases for internal server error
-      res.status(500).json(internalServerError())
-      return
-    }
+
+  const studentDetails = await getAStudentDetails(0, details.studentId)
+  if (studentDetails.err !== null) {
+    res
+      .status(responseStatusCode.get(studentDetails.err.error.title) || 400)
+      .json(studentDetails.err)
+    return
   }
 
   // does this teacher teache the course taught by the student
