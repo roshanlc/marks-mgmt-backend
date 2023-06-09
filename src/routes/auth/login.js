@@ -2,11 +2,11 @@ const { Router } = require("express")
 
 const router = Router()
 const Joi = require("joi")
-const { errorResponse, responseStatusCode } = require("../helper/error")
+const { errorResponse, responseStatusCode } = require("../../helper/error")
 const jwt = require("jsonwebtoken")
-const { checkLogin } = require("../db/user")
-const logger = require("../helper/logger")
-const { escapeColon } = require("../helper/utils")
+const { checkLogin } = require("../../db/users/user")
+const logger = require("../../helper/logger")
+const { escapeColon } = require("../../helper/utils")
 
 const JWT_SECRET = process.env.JWT_SECRET
 

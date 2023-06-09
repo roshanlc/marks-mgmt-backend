@@ -3,24 +3,24 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { extractTokenDetails } = require("../helper/extract-token")
+const { extractTokenDetails } = require("../../helper/extract-token")
 const {
   responseStatusCode,
   errorResponse,
   internalServerError,
   forbiddenError,
-} = require("../helper/error")
-const userDB = require("../db/user")
+} = require("../../helper/error")
+const userDB = require("../../db/users/user")
 const {
   getTeacherCourses,
   isTaughtBy,
   addMarksByTeacher,
   viewMarksByTeacher,
-} = require("../db/teacher-courses")
+} = require("../../db/teachers/teacher-courses")
 const Joi = require("joi")
-const { escapeColon } = require("../helper/utils")
-const { getStudentDetails } = require("../db/profile")
-const logger = require("../helper/logger")
+const { escapeColon } = require("../../helper/utils")
+const { getStudentDetails } = require("../../db/users/profile")
+const logger = require("../../helper/logger")
 const { Prisma } = require("@prisma/client")
 
 // Endpoint for teacher to fetch courses they teach

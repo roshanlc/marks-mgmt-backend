@@ -3,11 +3,11 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { extractTokenDetails } = require("../helper/extract-token")
-const { responseStatusCode } = require("../helper/error")
-const marksDB = require("../db/student-marks")
-const userDB = require("../db/user")
-const { errorResponse } = require("../helper/error")
+const { extractTokenDetails } = require("../../helper/extract-token")
+const { responseStatusCode } = require("../../helper/error")
+const marksDB = require("../../db/students/student-marks")
+const userDB = require("../../db/users/user")
+const { errorResponse } = require("../../helper/error")
 
 // Endpoint for student fetch their marks
 router.get("/marks", async function (req, res) {

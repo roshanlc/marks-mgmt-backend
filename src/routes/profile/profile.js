@@ -1,11 +1,11 @@
-const { getProfileDetails } = require("../db/profile")
+const { getProfileDetails } = require("../../db/users/profile")
 /**
  * This module contains controllers for profile related endpoints
  */
 const { Router } = require("express")
 const router = Router()
-const { extractTokenDetails } = require("../helper/extract-token")
-const { responseStatusCode } = require("../helper/error")
+const { extractTokenDetails } = require("../../helper/extract-token")
+const { responseStatusCode } = require("../../helper/error")
 
 router.get("", async function (req, res) {
   const tokenDetails = extractTokenDetails(req)

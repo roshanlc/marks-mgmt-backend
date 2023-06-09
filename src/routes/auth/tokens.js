@@ -1,8 +1,8 @@
 const { Router } = require("express")
 const router = Router()
 const jwt = require("jsonwebtoken")
-const logger = require("../helper/logger")
-const { internalServerError } = require("../helper/error")
+const logger = require("../../helper/logger")
+const { internalServerError } = require("../../helper/error")
 
 // Token Validation Endpoint
 // Endpoint for user token validation

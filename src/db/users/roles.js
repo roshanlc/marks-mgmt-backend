@@ -3,13 +3,13 @@
  */
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
-const logger = require("../helper/logger")
+const logger = require("../../helper/logger")
 const {
   errorResponse,
   internalServerError,
   badRequestError,
-} = require("../helper/error")
-const { toResult } = require("../helper/result")
+} = require("../../helper/error")
+const { toResult } = require("../../helper/result")
 
 /**
  * Fetches roles for the given user id

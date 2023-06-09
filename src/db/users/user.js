@@ -1,15 +1,15 @@
 // Db actions related to user model
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
-const { toResult } = require("../helper/result")
+const { toResult } = require("../../helper/result")
 const {
   errorResponse,
   internalServerError,
   badRequestError,
-} = require("../helper/error")
-const logger = require("../helper/logger")
-const { compareHash } = require("../helper/password")
-const { authenticationError, NotFoundError } = require("../helper/error")
+} = require("../../helper/error")
+const logger = require("../../helper/logger")
+const { compareHash } = require("../../helper/password")
+const { authenticationError, NotFoundError } = require("../../helper/error")
 const { assignRoleToUser } = require("./roles")
 
 /**

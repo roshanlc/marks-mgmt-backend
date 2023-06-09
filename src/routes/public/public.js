@@ -3,14 +3,7 @@
  */
 const { Router } = require("express")
 const router = Router()
-const {
-  responseStatusCode,
-  errorResponse,
-  internalServerError,
-  forbiddenError,
-} = require("../helper/error")
-const { escapeColon } = require("../helper/utils")
-const logger = require("../helper/logger")
+const { responseStatusCode } = require("../../helper/error")
 const {
   getFaculties,
   getFacultyById,
@@ -20,7 +13,7 @@ const {
   getProgramById,
   getSyllabusById,
   getAllSyllabus,
-} = require("../db/others")
+} = require("../../db/others")
 
 //get all faculties
 router.get("/faculties", async function (req, res) {

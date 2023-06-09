@@ -4,11 +4,11 @@
 
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
-const logger = require("../helper/logger")
-const { errorResponse, internalServerError } = require("../helper/error")
-const { toResult } = require("../helper/result")
-const { getLatestBatch } = require("./others")
-const { NotFoundError } = require("../helper/error")
+const logger = require("../../helper/logger")
+const { errorResponse, internalServerError } = require("../../helper/error")
+const { toResult } = require("../../helper/result")
+const { getLatestBatch } = require("../others")
+const { NotFoundError } = require("../../helper/error")
 
 /**
  * Get courses taught by a teacher

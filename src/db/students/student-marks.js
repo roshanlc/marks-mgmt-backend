@@ -4,9 +4,9 @@
 
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
-const logger = require("../helper/logger")
-const { errorResponse, internalServerError } = require("../helper/error")
-const { toResult } = require("../helper/result")
+const logger = require("../../helper/logger")
+const { errorResponse, internalServerError } = require("../../helper/error")
+const { toResult } = require("../../helper/result")
 
 /**
  * Returns all the marks of a student grouped by semester
