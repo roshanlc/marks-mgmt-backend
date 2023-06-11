@@ -456,7 +456,7 @@ async function addAdminWithUser(
       },
     })
 
-    const roleAssign = await assignRoleToUser(user.result.id, "teacher")
+    const roleAssign = await assignRoleToUser(user.result.id, "admin")
     if (roleAssign.err !== null) {
       return roleAssign
     }

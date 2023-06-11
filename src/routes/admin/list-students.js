@@ -6,8 +6,50 @@ const router = Router()
 const { responseStatusCode } = require("../../helper/error")
 const studentsDb = require("../../db/students/students")
 
+// Get count of  students
+router.get("/count", async function (req, res) {
+  console.log("inside count")
+  const facultyId = Number(req.query.faculty_id) || 0
+  const departmentId = Number(req.query.dept_id) || 0
+  const programId = Number(req.query.program_id) || 0
+  const syllabusId = Number(req.query.syllabus_id) || 0
+  const status = req.query.status || "ACTIVE"
+
+  let count = {}
+
+  if (
+    programId === 0 &&
+    syllabusId === 0 &&
+    departmentId === 0 &&
+    facultyId === 0 &&
+    status === "ACTIVE"
+  ) {
+    console.log("for all")
+    count = await studentsDb.getAllStudentsCount()
+  } else {
+    console.log("for specific")
+
+    count = await studentsDb.getStudentsCountBy(
+      facultyId,
+      departmentId,
+      programId,
+      syllabusId,
+      status
+    )
+  }
+
+  if (count.err !== null) {
+    res
+      .status(responseStatusCode.get(count.err.error.title) || 400)
+      .json(count.err)
+    return
+  }
+
+  res.status(200).json(count.result)
+})
+
 // list all students
-router.get("", async function (req, res) {
+router.get("/", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
   const syllabusId = Number(req.query.syllabus_id) || 0
   const departmentId = Number(req.query.dept_id) || 0
