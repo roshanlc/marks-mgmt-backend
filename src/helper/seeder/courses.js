@@ -163,6 +163,8 @@ const old_comp_courses = [
       {
         course_title: "Project I",
         code: "CMP 290",
+        elective: false,
+        project: true,
         credits: 1,
       },
     ],
@@ -230,11 +232,15 @@ const old_comp_courses = [
       {
         course_title: "Elective I",
         code: "",
+        elective: true,
+        project: false,
         credits: 3,
       },
       {
         course_title: "Project II",
         code: "CMP 390",
+        elective: false,
+        project: true,
         credits: 2,
       },
     ],
@@ -271,6 +277,8 @@ const old_comp_courses = [
       {
         course_title: "Elective II",
         code: "",
+        elective: true,
+        project: false,
         credits: 3,
       },
     ],
@@ -302,11 +310,15 @@ const old_comp_courses = [
       {
         course_title: "Elective III",
         code: "",
+        elective: true,
+        project: false,
         credits: 3,
       },
       {
         course_title: "Project III",
         code: "CMP 490",
+        elective: false,
+        project: true,
         credits: 5,
       },
     ],
@@ -321,4 +333,4 @@ const markWeightage = [
     practical: 20,
   },
 ]
-module.exports = { courses, markWeightage }
+module.exports = { courses, markWeightage, old_comp_courses }

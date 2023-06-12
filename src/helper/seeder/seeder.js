@@ -12,7 +12,7 @@ const {
   programSemesters,
   programSyllabus,
 } = require("./programs")
-const { courses, markWeightage } = require("./courses")
+const { courses, markWeightage, old_comp_courses } = require("./courses")
 const { admins, students, teachers } = require("./users.js")
 const {
   addStudentWithUser,
@@ -208,41 +208,69 @@ async function seedCourses() {
         data: { practical: markWt.practical, theory: markWt.theory },
       })
     }
+
+    const compProgramId = await db.program.findFirst({
+      where: { name: "Computer Engineering", level: { name: "Bachelor" } },
+    })
+
+    const oldSyllabusId = await db.syllabus.findFirst({
+      where: { name: "Computer Old Syllabus" },
+    })
+
     const markWeightList = new WeakMap()
 
-    for (const course of courses) {
-      const markWtId =
-        markWeightList.get(course.markWeightage) ||
-        (await db.markWeightage.findFirstOrThrow({
-          where: {
-            AND: [
-              {
-                theory: course.markWeightage.theory,
-                practical: course.markWeightage.practical,
+    for (const semester of old_comp_courses) {
+      for (const course of semester.courses) {
+        try {
+          const markWeightage = { theory: 30, practical: 20 }
+
+          const markWtId =
+            markWeightList.get(markWeightage) ||
+            (await db.markWeightage.findFirstOrThrow({
+              where: {
+                AND: [
+                  {
+                    theory: markWeightage.theory,
+                    practical: markWeightage.practical,
+                  },
+                ],
               },
-            ],
-          },
-        }))
+            }))
 
-      // set the data to map, so reduce fetching from db
-      markWeightList.set(course.markWeightage, markWtId)
+          // set the data to map, so reduce fetching from db
+          markWeightList.set(markWeightage, markWtId)
 
-      // add courses
-      await db.course.create({
-        data: {
-          credit: course.credit,
-          name: course.name,
-          code: course.code,
-          elective: course.elective,
-          project: course.project,
-          markWeightageId: markWtId.id,
-        },
-      })
+          // add courses
+          const courseDetails = await db.course.create({
+            data: {
+              credit: course.credits,
+              name: course.course_title,
+              code: course.code || undefined,
+              elective: course.elective || false,
+              project: course.project || false,
+              markWeightage: { connect: { id: markWtId.id } },
+            },
+          })
+
+          await db.programCourses.create({
+            data: {
+              courseId: courseDetails.id,
+              programId: compProgramId.id,
+              semesterId: semester.semester,
+              syllabusId: oldSyllabusId.id,
+            },
+          })
+        } catch (err) {
+          console.log(err)
+          logger.warn(`Something went wrong: ${err.message}`)
+        }
+      }
     }
   } catch (err) {
     logger.warn(`Something went wrong: ${err.message}`)
   }
 }
+
 /**
  * seeds the database with data
  */
@@ -257,6 +285,7 @@ async function seedDatabase() {
     await seedPrograms()
 
     await seedCourses()
+
     // then seed users table
     await seedUsers()
 
