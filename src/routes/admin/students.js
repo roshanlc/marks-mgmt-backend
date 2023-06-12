@@ -3,8 +3,12 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { responseStatusCode } = require("../../helper/error")
+const { responseStatusCode, errorResponse } = require("../../helper/error")
 const studentsDb = require("../../db/students/students")
+const Joi = require("joi")
+const { escapeColon } = require("../../helper/utils")
+const { addStudentWithUser } = require("../../db/users/user")
+const { hashPassword } = require("../../helper/password")
 
 // Get count of  students
 router.get("/count", async function (req, res) {
@@ -92,6 +96,74 @@ router.get("/:id", async function (req, res) {
   }
 
   res.status(200).json(allStudents.result)
+})
+
+// schema for the new student payload
+const newStudentSchema = Joi.object({
+  email: Joi.string().email().required().trim(),
+  password: Joi.string().required().trim().min(5).max(50),
+  programId: Joi.number().required().min(1),
+  syllabusId: Joi.number().required().min(1),
+  semester: Joi.number().required().min(1),
+  name: Joi.string().required().trim().min(3),
+  address: Joi.string().trim(),
+  contactNo: Joi.string().trim(),
+  symbolNo: Joi.string().required().trim(),
+  puRegNo: Joi.string().required().trim(),
+})
+
+// Add a new student
+router.post("/", async function (req, res) {
+  const err = newStudentSchema.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  const {
+    email,
+    password,
+    programId,
+    syllabusId,
+    semester,
+    name,
+    address,
+    contactNo,
+    symbolNo,
+    puRegNo,
+  } = req.body
+
+  // hash of the password
+
+  const hash = hashPassword(password)
+
+  const newStudent = await addStudentWithUser(
+    email,
+    hash,
+    name,
+    address,
+    contactNo,
+    true,
+    false,
+    symbolNo,
+    puRegNo,
+    semester,
+    programId,
+    syllabusId,
+    "ACTIVE"
+  )
+
+  if (newStudent.err !== null) {
+    res
+      .status(responseStatusCode.get(newStudent.err.error.title))
+      .json(newStudent.err)
+    return
+  }
+
+  res.status(201).json(newStudent.result)
+  return
 })
 
 module.exports = router

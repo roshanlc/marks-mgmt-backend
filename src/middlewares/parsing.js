@@ -5,8 +5,8 @@ const logger = require("../helper/logger")
 // and returns a 400 response
 function parsingErrorHandler(err, req, res, next) {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
-    logger.warn("Error while parsing json: ", err.message)
-    return res.status(400).send(errorResponse("Bad Request", err.message))
+    logger.warn(`Error while parsing json: ${err.message}`)
+    return res.status(400).json(errorResponse.badRequestError(err.message))
   }
   next()
 }

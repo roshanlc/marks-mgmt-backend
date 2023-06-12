@@ -21,7 +21,7 @@ const {
 const tokenValidationHandler = require("./routes/auth/tokens")
 const teacherCoursesRouter = require("./routes/teacher/teacher-courses")
 const publicInfoRouter = require("./routes/public/public")
-const listStudentsRouter = require("./routes/admin/list-students")
+const listStudentsRouter = require("./routes/admin/students")
 
 dotenv.config() // load .env config
 
