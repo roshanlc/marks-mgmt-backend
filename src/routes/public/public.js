@@ -13,6 +13,7 @@ const {
   getProgramById,
   getSyllabusById,
   getAllSyllabus,
+  getSyllabusOfProgram,
 } = require("../../db/others")
 
 //get all faculties
@@ -36,6 +37,7 @@ router.get("/faculties/:id", async function (req, res) {
   const faculties = await getFacultyById(Number(id) || 0)
   if (faculties.err !== null) {
     res
+      .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(faculties.err.error.title) || 400)
       .json(faculties.err)
     return
@@ -53,7 +55,10 @@ router.get("/departments", async function (req, res) {
     return
   }
 
-  res.status(200).json(depts.result)
+  res
+    .header("Cache-Control", "public, max-age=604800")
+    .status(200)
+    .json(depts.result)
   return
 })
 
@@ -64,6 +69,7 @@ router.get("/departments/:id", async function (req, res) {
   const dept = await getDepartmentById(Number(id) || 0)
   if (dept.err !== null) {
     res
+      .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(dept.err.error.title) || 400)
       .json(dept.err)
     return
@@ -78,6 +84,7 @@ router.get("/programs", async function (req, res) {
   const programs = await getPrograms()
   if (programs.err !== null) {
     res
+      .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode(programs.err.error.title) || 400)
       .json(programs.err)
     return
@@ -99,13 +106,22 @@ router.get("/programs/:id", async function (req, res) {
     return
   }
 
-  res.status(200).json(program.result)
+  res
+    .header("Cache-Control", "public, max-age=604800")
+    .status(200)
+    .json(program.result)
   return
 })
 
 //get all syllabus
 router.get("/syllabus", async function (req, res) {
-  const syallbus = await getAllSyllabus()
+  const programId = Number(req.query.program_id) || 0
+  let syallbus = {}
+  if (programId > 0) {
+    syallbus = await getSyllabusOfProgram(programId)
+  } else {
+    syallbus = await getAllSyllabus()
+  }
   if (syallbus.err !== null) {
     res
       .status(responseStatusCode(syallbus.err.error.title) || 400)
@@ -113,7 +129,10 @@ router.get("/syllabus", async function (req, res) {
     return
   }
 
-  res.status(200).json(syallbus.result)
+  res
+    .header("Cache-Control", "public, max-age=604800")
+    .status(200)
+    .json(syallbus.result)
   return
 })
 
@@ -129,7 +148,10 @@ router.get("/syllabus/:id", async function (req, res) {
     return
   }
 
-  res.status(200).json(syallbus.result)
+  res
+    .header("Cache-Control", "public, max-age=604800")
+    .status(200)
+    .json(syallbus.result)
   return
 })
 

@@ -239,7 +239,14 @@ async function getProgramById(programId = 0, programName = "") {
 async function getAllSyllabus() {
   try {
     const syllabus = await db.syllabus.findMany({
-      include: { program: { include: { department: true, level: true } } },
+      include: {
+        program: {
+          include: {
+            department: true,
+            level: true,
+          },
+        },
+      },
     })
     return toResult(syllabus, null)
   } catch (err) {
@@ -262,11 +269,20 @@ async function getAllSyllabus() {
  */
 async function getSyllabusById(syallabusId = 0, syallabusName = "") {
   try {
-    const program = await db.syllabus.findFirstOrThrow({
+    const syllabus = await db.syllabus.findFirstOrThrow({
       where: { OR: [{ id: syallabusId }, { name: syallabusName }] },
       include: { program: { include: { department: true, level: true } } },
     })
-    return toResult(program, null)
+
+    // fetch courses the syllabus
+    const courses = await db.programCourses.findMany({
+      where: { syllabusId: syllabus.id },
+      include: { course: true },
+    })
+
+    // attach courses to syllabus
+    syllabus.courses = courses
+    return toResult(syllabus, null)
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (
@@ -289,6 +305,37 @@ async function getSyllabusById(syallabusId = 0, syallabusName = "") {
   }
 }
 
+/**
+ * Get all syllabus for a program
+ * @returns All the syllabus of a program
+ */
+async function getSyllabusOfProgram(programId) {
+  try {
+    const syllabus = await db.syllabus.findMany({
+      where: { programId: programId },
+      include: {
+        program: {
+          include: {
+            department: true,
+            level: true,
+          },
+        },
+      },
+    })
+    return toResult(syllabus, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getSyllabusOfProgram(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
 module.exports = {
   addBatch,
   getLatestBatch,
@@ -300,4 +347,5 @@ module.exports = {
   getPrograms,
   getAllSyllabus,
   getSyllabusById,
+  getSyllabusOfProgram,
 }
