@@ -82,7 +82,7 @@ function generateToken(user) {
     { id: user.id, email: user.email, UserRoles: user.UserRoles },
     JWT_SECRET,
     {
-      expiresIn: "1d",
+      expiresIn: "10d",
     }
   )
 
