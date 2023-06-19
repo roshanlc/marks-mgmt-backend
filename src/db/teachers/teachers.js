@@ -78,15 +78,17 @@ async function listTeachersBy(programId = 0, departmentId = 0) {
  */
 async function getATeacherDetails(userId = 0, teacherId = 0) {
   try {
-    const student = await db.teacher.findFirstOrThrow({
+    const teacher = await db.teacher.findFirstOrThrow({
       where: { OR: [{ userId: userId }, { id: teacherId }] },
       include: {
         user: { select: { id: true, name: true, email: true } },
-        TeacherCourses: true,
+        TeacherCourses: {
+          include: { course: true, program: true, batch: true },
+        },
       },
     })
 
-    return toResult({ student: student }, null)
+    return toResult({ teacher: teacher }, null)
   } catch (err) {
     // check for Known erorr explicitly
     if (
@@ -152,12 +154,3 @@ module.exports = {
   getATeacherDetails,
   getAllTeachersCount,
 }
-
-const demo = async () => {
-  console.log(JSON.stringify(await listAllTeachers()))
-  console.log(JSON.stringify(await listTeachersBy(1)))
-  console.log(JSON.stringify(await getATeacherDetails(1)))
-  console.log(JSON.stringify(await getAllTeachersCount()))
-}
-
-demo()

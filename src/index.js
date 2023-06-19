@@ -22,6 +22,7 @@ const tokenValidationHandler = require("./routes/auth/tokens")
 const teacherCoursesRouter = require("./routes/teacher/teacher-courses")
 const publicInfoRouter = require("./routes/public/public")
 const listStudentsRouter = require("./routes/admin/students")
+const listTeachersRouter = require("./routes/admin/teachers")
 
 dotenv.config() // load .env config
 
@@ -92,6 +93,13 @@ app.use(
   authHandler,
   teacherRoleHandler,
   teacherCoursesRouter
+)
+
+app.use(
+  "/api/v1/admin/teachers",
+  authHandler,
+  adminRoleHandler,
+  listTeachersRouter
 )
 
 // A basic endpoint to verify token validity
