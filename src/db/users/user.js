@@ -8,7 +8,7 @@ const {
   badRequestError,
 } = require("../../helper/error")
 const logger = require("../../helper/logger")
-const { compareHash } = require("../../helper/password")
+const { compareHash, hashPassword } = require("../../helper/password")
 const { authenticationError, NotFoundError } = require("../../helper/error")
 const { assignRoleToUser } = require("./roles")
 
@@ -492,6 +492,36 @@ async function addAdminWithUser(
   }
 }
 
+/**
+ * Change password of a user
+ * @param {Number} userId  - id of the user
+ * @param {String} oldPassword - old password of a user
+ * @param {String} newPassword  - new password of auser
+ * @returns success msg or corresponding error
+ */
+async function changePassword(userId, newPassword) {
+  try {
+    const newHash = hashPassword(newPassword)
+
+    const userDetails = await db.user.update({
+      where: { id: userId },
+      data: { password: newHash },
+    })
+    // return user details by id
+    return await getUserDetails(userDetails.id)
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`changePassword(): ${err.message}`)
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   checkLogin,
   getUserDetails,
@@ -502,4 +532,5 @@ module.exports = {
   addStudentWithUser,
   addTeacherWithUser,
   addAdminWithUser,
+  changePassword,
 }

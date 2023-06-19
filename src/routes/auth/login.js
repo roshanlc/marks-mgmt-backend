@@ -4,9 +4,9 @@ const router = Router()
 const Joi = require("joi")
 const { errorResponse, responseStatusCode } = require("../../helper/error")
 const jwt = require("jsonwebtoken")
-const { checkLogin } = require("../../db/users/user")
-const logger = require("../../helper/logger")
+const { checkLogin, changePassword } = require("../../db/users/user")
 const { escapeColon } = require("../../helper/utils")
+const { extractTokenDetails } = require("../../helper/extract-token")
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -34,10 +34,9 @@ router.post("", async function (req, res) {
 
   const userDetails = await checkLogin(email, password)
   if (userDetails.err !== null) {
-    logger.warn(userDetails.err)
     res
       .status(responseStatusCode.get(userDetails.err.error.title) || 500)
-      .json(err)
+      .json(userDetails.err)
     return
   }
 
@@ -68,6 +67,38 @@ router.post("", async function (req, res) {
 
   // return response
   res.status(200).json(loginResponse(token, user))
+  return
+})
+
+// schema for the password change payload
+const resetSchema = Joi.object({
+  newPassword: Joi.string().trim().min(5).max(50),
+})
+
+// change Password Endpoint
+router.post("/change", async function (req, res) {
+  // validate the request body
+  const err = resetSchema.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  // get token details
+  const tokenDetails = extractTokenDetails(req)
+
+  const pwChange = await changePassword(tokenDetails.id, req.body.newPassword)
+
+  if (pwChange.err !== null) {
+    res
+      .status(responseStatusCode.get(pwChange.err.error.title) || 400)
+      .json(pwChange.err)
+    return
+  }
+  // return response
+  res.status(200).json({ msg: "Password Change successfull" })
   return
 })
 
