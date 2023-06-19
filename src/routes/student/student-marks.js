@@ -99,4 +99,28 @@ router.get("/marks", async function (req, res) {
   return
 })
 
+router.get("/syllabus", async function (req, res) {
+  const tokenDetails = extractTokenDetails(req)
+  // get student id
+  const studentId = await userDB.getStudentId(tokenDetails.id)
+
+  if (studentId.err !== null) {
+    res
+      .status(responseStatusCode.get(studentId.err.error.title) || 400)
+      .json(studentId.err)
+    return
+  }
+
+  const syllabus = await marksDB.getStudentSyllabus(studentId.result.id)
+  if (syllabus.err !== null) {
+    res
+      .status(responseStatusCode.get(syllabus.err.error.title) || 400)
+      .json(syllabus.err)
+    return
+  }
+
+  res.status(200).json(syllabus.result)
+  return
+})
+
 module.exports = router

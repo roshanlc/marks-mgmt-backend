@@ -259,8 +259,47 @@ async function getStudentMarksByCourse(
   }
 }
 
+/**
+ * Returns the syllabus of a student
+ * @param {Number} studentId
+ * @returns the syllabus of a student
+ */
+async function getStudentSyllabus(studentId) {
+  try {
+    // fetch student details
+    const studentDetails = await db.student.findFirstOrThrow({
+      where: { id: studentId },
+      select: {
+        syllabus: {
+          include: {
+            program: true,
+            ProgramCourses: { include: { course: true } },
+          },
+        },
+      },
+    })
+
+    return toResult(studentDetails, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "Please provide valid student id.")
+      )
+    } else {
+      logger.warn(`getStudentSyllabus(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
 module.exports = {
   getStudentMarks,
   getStudentMarksBySemester,
   getStudentMarksByCourse,
+  getStudentSyllabus,
 }
