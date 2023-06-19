@@ -318,8 +318,8 @@ async function addStudentWithUser(
     }
 
     // valid user creation operation
-    if (user.password) {
-      delete user.password
+    if (user.result.password) {
+      delete user.result.password
     }
     student.user = user.result
     student.user.UserRoles = roleAssign.result
@@ -390,8 +390,8 @@ async function addTeacherWithUser(
     }
 
     // valid user creation operation
-    if (user.password) {
-      delete user.password
+    if (user.result.password) {
+      delete user.result.password
     }
     teacher.user = user.result
     teacher.user.UserRoles = roleAssign.result
@@ -462,9 +462,10 @@ async function addAdminWithUser(
     }
 
     // valid user creation operation
-    if (user.password) {
-      delete user.password
+    if (user.result.password) {
+      delete user.result.password
     }
+
     admin.user = user.result
     admin.user.UserRoles = roleAssign.result
     return toResult(admin, null)

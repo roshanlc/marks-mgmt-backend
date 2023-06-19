@@ -3,13 +3,17 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { responseStatusCode } = require("../../helper/error")
+const { responseStatusCode, errorResponse } = require("../../helper/error")
 const {
   getAllTeachersCount,
   listAllTeachers,
   listTeachersBy,
   getATeacherDetails,
 } = require("../../db/teachers/teachers")
+const Joi = require("joi")
+const { escapeColon } = require("../../helper/utils")
+const { hashPassword } = require("../../helper/password")
+const { addTeacherWithUser } = require("../../db/users/user")
 
 // Get count of teachers
 router.get("/count", async function (req, res) {
@@ -71,6 +75,52 @@ router.get("/:id", async function (req, res) {
   }
 
   res.status(200).json(teacher.result)
+})
+
+// schema for the new teacher payload
+const newTeacherSchema = Joi.object({
+  email: Joi.string().email().required().trim(),
+  password: Joi.string().required().trim().min(5).max(50),
+  name: Joi.string().required().trim().min(3),
+  address: Joi.string().trim(),
+  contactNo: Joi.string().trim(),
+})
+
+// create a new teacher
+router.post("/", async function (req, res) {
+  const err = newTeacherSchema.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  // extract from valid request body
+  const { email, password, name, address, contactNo } = req.body
+
+  // hash of the password
+  const hash = hashPassword(password)
+
+  const newTeacher = await addTeacherWithUser(
+    email,
+    hash,
+    name,
+    address,
+    contactNo,
+    true,
+    false
+  )
+
+  if (newTeacher.err !== null) {
+    res
+      .status(responseStatusCode.get(newTeacher.err.error.title))
+      .json(newTeacher.err)
+    return
+  }
+
+  res.status(201).json(newTeacher.result)
+  return
 })
 
 module.exports = router
