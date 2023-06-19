@@ -12,7 +12,6 @@ const { hashPassword } = require("../../helper/password")
 
 // Get count of  students
 router.get("/count", async function (req, res) {
-  console.log("inside count")
   const facultyId = Number(req.query.faculty_id) || 0
   const departmentId = Number(req.query.dept_id) || 0
   const programId = Number(req.query.program_id) || 0
