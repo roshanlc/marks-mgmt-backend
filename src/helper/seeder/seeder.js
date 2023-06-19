@@ -19,7 +19,7 @@ const {
   addTeacherWithUser,
   addAdminWithUser,
 } = require("../../db/users/user")
-const { getProgramById, getSyllabusById } = require("../../db/others")
+const { getProgramById, getSyllabusById } = require("../../db/programs/others")
 const { assignRoleToUser } = require("../../db/users/roles")
 
 // prisma client

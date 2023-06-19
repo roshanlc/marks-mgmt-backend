@@ -14,7 +14,7 @@ const {
   getSyllabusById,
   getAllSyllabus,
   getSyllabusOfProgram,
-} = require("../../db/others")
+} = require("../../db/programs/others")
 
 //get all faculties
 router.get("/faculties", async function (req, res) {
