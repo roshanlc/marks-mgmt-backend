@@ -174,7 +174,7 @@ async function getPrograms() {
       include: {
         department: { include: { faculty: true } },
         level: true,
-        ProgramCourses: true,
+        Syllabus: true,
         ProgramSemesters: true,
         RunningSemesters: true,
       },
@@ -205,7 +205,10 @@ async function getProgramById(programId = 0, programName = "") {
       include: {
         department: { include: { faculty: true } },
         level: true,
-        ProgramCourses: true,
+        Syllabus: true,
+        ProgramCourses: {
+          include: { course: true, semester: true, syllabus: true },
+        },
         ProgramSemesters: true,
       },
     })
