@@ -224,6 +224,9 @@ CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "UserRoles_userId_roleId_key" ON "UserRoles"("userId", "roleId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Faculty_name_key" ON "Faculty"("name");
 
 -- CreateIndex
@@ -239,6 +242,12 @@ CREATE UNIQUE INDEX "Program_name_key" ON "Program"("name");
 CREATE UNIQUE INDEX "ProgramSemesters_programId_key" ON "ProgramSemesters"("programId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ProgramSemesters_programId_semesterId_key" ON "ProgramSemesters"("programId", "semesterId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RunningSemesters_programId_semesterId_batchId_key" ON "RunningSemesters"("programId", "semesterId", "batchId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Course_code_key" ON "Course"("code");
 
 -- CreateIndex
@@ -248,10 +257,22 @@ CREATE UNIQUE INDEX "ElectiveCourse_code_key" ON "ElectiveCourse"("code");
 CREATE UNIQUE INDEX "ElectiveCourse_name_key" ON "ElectiveCourse"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ProgramCourses_programId_semesterId_syllabusId_courseId_key" ON "ProgramCourses"("programId", "semesterId", "syllabusId", "courseId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Student_symbolNo_key" ON "Student"("symbolNo");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Student_puRegNo_key" ON "Student"("puRegNo");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StudentMarks_studentId_courseId_key" ON "StudentMarks"("studentId", "courseId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TeacherCourses_teacherId_courseId_programId_batchId_key" ON "TeacherCourses"("teacherId", "courseId", "programId", "batchId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StudentStatus_studentId_status_key" ON "StudentStatus"("studentId", "status");
 
 -- AddForeignKey
 ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

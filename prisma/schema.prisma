@@ -43,6 +43,7 @@ model UserRoles {
   roleId Int
 
   @@id([userId, roleId])
+  @@unique([userId, roleId])
 }
 
 // A faculty 
@@ -115,6 +116,7 @@ model ProgramSemesters {
   semesterId     Int
 
   @@id([programId, semesterId])
+  @@unique([programId, semesterId])
 }
 
 // Currently running semesters of a program
@@ -129,6 +131,7 @@ model RunningSemesters {
   batchId    Int
 
   @@id([programId, semesterId, batchId])
+  @@unique([programId, semesterId, batchId])
 }
 
 model MarkWeightage {
@@ -177,6 +180,7 @@ model ProgramCourses {
   syllabusId Int
 
   @@id([programId, semesterId, syllabusId, courseId])
+  @@unique([programId, semesterId, syllabusId, courseId])
 }
 
 // TODO: Qn: How to wrap a certain batch run with running semester, teacher courses, and other stuffs????
@@ -252,6 +256,7 @@ model StudentMarks {
   batchId   Int
 
   @@id([studentId, courseId])
+  @@unique([studentId, courseId])
 }
 
 // Teacher and courses taught in a batch
@@ -267,6 +272,7 @@ model TeacherCourses {
   programId Int
 
   @@id([teacherId, courseId, programId, batchId])
+  @@unique([teacherId, courseId, programId, batchId])
 }
 
 // Possible status of a student
@@ -283,4 +289,5 @@ model StudentStatus {
   studentId Int
 
   @@id([studentId, status])
+  @@unique([studentId, status])
 }

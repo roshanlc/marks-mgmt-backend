@@ -5,7 +5,11 @@
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../../helper/logger")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  badRequestError,
+} = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 const { getLatestBatch } = require("../programs/others")
 const { NotFoundError } = require("../../helper/error")
@@ -139,6 +143,13 @@ async function addMarksByTeacher(
   NotQualified = false
 ) {
   try {
+    const batchId = await getLatestBatch()
+
+    // check for errors
+    if (batchId.err !== null) {
+      return batchId
+    }
+
     const marksAddition = await db.studentMarks.create({
       data: {
         courseId: courseId,
@@ -147,6 +158,7 @@ async function addMarksByTeacher(
         practical: practical,
         NotQualified: NotQualified,
         teacherId: teacherId,
+        batchId: batchId.result.id,
       },
     })
 
@@ -175,7 +187,58 @@ async function addMarksByTeacher(
         )
       )
     } else {
-      logger.warn(`addMarks(): ${err.code}`) // Always log cases for internal server error
+      logger.warn(`addMarks(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Update marks of a student for a course
+ * @param {Number} studentId
+ * @param {Number} courseId
+ * @param {Number} theory
+ * @param {Number} practical
+ * @param {Boolean} NotQualified
+ * @returns Updated marks object if successfull or error incase of failure
+ */
+async function updateMarksOfStudent(
+  studentId,
+  courseId,
+  theory,
+  practical,
+  NotQualified = false
+) {
+  try {
+    const marksAddition = await db.studentMarks.update({
+      where: { studentId_courseId: { studentId, courseId } },
+      data: {
+        theory: theory,
+        practical: practical,
+        NotQualified: NotQualified,
+      },
+    })
+
+    return toResult(marksAddition, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong went with the request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`updateMarks(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())
     }
   }
@@ -244,4 +307,5 @@ module.exports = {
   isTaughtBy,
   addMarksByTeacher,
   viewMarksByTeacher,
+  updateMarksOfStudent,
 }
