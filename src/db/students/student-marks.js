@@ -269,6 +269,7 @@ async function getStudentSyllabus(studentId) {
     // fetch student details
     const studentDetails = await db.student.findFirstOrThrow({
       where: { id: studentId },
+      orderBy: { semesterId: "asc" },
       select: {
         syllabus: {
           include: {
