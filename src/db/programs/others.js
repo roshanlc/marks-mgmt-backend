@@ -23,6 +23,18 @@ async function addBatch(year, season) {
     })
     return toResult(batchInfo, null)
   } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    }
     logger.warn(`addBatch(): ${err.message}`) // Always log cases for internal server error
     return toResult(null, internalServerError)
   }
