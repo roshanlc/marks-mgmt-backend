@@ -67,7 +67,7 @@ app.use((req, res, next) => {
   next()
 })
 // enable json parsing middleware
-app.use(express.json())
+app.use(express.json({ limit: "1mb" }))
 
 // use the json parsing error handling middleware
 app.use(parsingErrorHandler)

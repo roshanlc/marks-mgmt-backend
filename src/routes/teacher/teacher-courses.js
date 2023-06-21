@@ -16,10 +16,13 @@ const {
   addMarksByTeacher,
   viewMarksByTeacher,
   updateMarksOfStudent,
+  updateMarksOfAllStudentsForCourse,
+  addMarksOfAllStudentsForCourse,
 } = require("../../db/teachers/teacher-courses")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
 const { getAStudentDetails } = require("../../db/students/students")
+const { array } = require("joi")
 
 // Endpoint for teacher to fetch courses they teach
 router.get("/courses", async function (req, res) {
@@ -254,6 +257,126 @@ router.put("/marks", async function (req, res) {
 
   // successfully created resource
   res.status(200).json(marksAddition.result)
+  return
+})
+
+const allStudentsMarksSchema = Joi.object({
+  courseId: Joi.number().integer().positive().required(),
+  programId: Joi.number().integer().positive().required(),
+
+  marks: Joi.array()
+    .items(
+      Joi.object({
+        studentId: Joi.number().integer().positive().required(),
+        theory: Joi.number().integer().min(0).max(100).required(),
+        practical: Joi.number().integer().min(0).max(100).required(),
+        notQualified: Joi.boolean().default(false).required(),
+      })
+    )
+    .required(),
+})
+
+// endpoint for teacher to update marks for all students enrolled in a course
+router.put("/marks/all", async function (req, res) {
+  const tokenDetails = extractTokenDetails(req)
+  // get teacher id
+  const teacherId = await userDB.getTeacherId(tokenDetails.id)
+
+  if (teacherId.err !== null) {
+    res
+      .status(responseStatusCode.get(teacherId.err.error.title) || 400)
+      .json(teacherId.err)
+    return
+  }
+
+  const err = allStudentsMarksSchema.validate(req.body).error
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  const { courseId, programId, marks } = req.body
+
+  // does this teacher teach the given course
+  const teaches = await isTaughtBy(teacherId.result.id, programId, courseId)
+
+  if (teaches.err !== null) {
+    res
+      .status(responseStatusCode.get(teaches.err.error.title) || 400)
+      .json(teaches.err)
+    return
+  }
+
+  // check if the course is taught by this teacher
+  if (!teaches.result) {
+    res.status(403).json(forbiddenError())
+    return
+  }
+  const updatedMarks = await updateMarksOfAllStudentsForCourse(courseId, marks)
+
+  if (updatedMarks.err !== null) {
+    res
+      .status(responseStatusCode.get(updatedMarks.err.error.title) || 400)
+      .json(updatedMarks.err)
+    return
+  }
+
+  res.status(200).json(updatedMarks.result)
+  return
+})
+
+// endpoint for teacher to create marks for all students enrolled in a course
+router.post("/marks/all", async function (req, res) {
+  const tokenDetails = extractTokenDetails(req)
+  // get teacher id
+  const teacherId = await userDB.getTeacherId(tokenDetails.id)
+
+  if (teacherId.err !== null) {
+    res
+      .status(responseStatusCode.get(teacherId.err.error.title) || 400)
+      .json(teacherId.err)
+    return
+  }
+
+  const err = allStudentsMarksSchema.validate(req.body).error
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  const { courseId, programId, marks } = req.body
+
+  // does this teacher teach the given course
+  const teaches = await isTaughtBy(teacherId.result.id, programId, courseId)
+
+  if (teaches.err !== null) {
+    res
+      .status(responseStatusCode.get(teaches.err.error.title) || 400)
+      .json(teaches.err)
+    return
+  }
+
+  // check if the course is taught by this teacher
+  if (!teaches.result) {
+    res.status(403).json(forbiddenError())
+    return
+  }
+  const createdMarks = await addMarksOfAllStudentsForCourse(
+    teacherId.result.id,
+    courseId,
+    marks
+  )
+
+  if (createdMarks.err !== null) {
+    res
+      .status(responseStatusCode.get(createdMarks.err.error.title) || 400)
+      .json(createdMarks.err)
+    return
+  }
+
+  res.status(200).json(createdMarks.result)
   return
 })
 

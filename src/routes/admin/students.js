@@ -27,7 +27,6 @@ router.get("/count", async function (req, res) {
     facultyId === 0 &&
     status === "ACTIVE"
   ) {
-    console.log("for all")
     count = await studentsDb.getAllStudentsCount()
   } else {
     console.log("for specific")

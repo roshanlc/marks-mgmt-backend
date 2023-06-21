@@ -13,6 +13,7 @@ const {
 const { toResult } = require("../../helper/result")
 const { getLatestBatch } = require("../programs/others")
 const { NotFoundError } = require("../../helper/error")
+const { escapeColon } = require("../../helper/utils")
 
 /**
  * Get courses taught by a teacher
@@ -302,10 +303,193 @@ async function viewMarksByTeacher(teacherId, courseId, programId) {
   }
 }
 
+/**
+ * Update the marks of group of students for a course
+ * @param {Number} teacherId
+ * @param {Number} courseId
+ * @param {Object} marks
+ * @returns array of successfull and failed marks update
+ */
+async function updateMarksOfAllStudentsForCourse(courseId, marks) {
+  try {
+    const batchId = await getLatestBatch()
+
+    if (batchId.err !== null) {
+      return batchId
+    }
+
+    const success = []
+    const errors = []
+    for (const item of marks) {
+      await db.studentMarks
+        .update({
+          where: {
+            studentId_courseId: {
+              studentId: item.studentId,
+              courseId: courseId,
+            },
+          },
+          data: {
+            theory: item.theory,
+            practical: item.practical,
+            NotQualified: item.notQualified,
+          },
+        })
+        .then((response) => success.push({ ...response }))
+        .catch((err) => {
+          if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2003"
+          ) {
+            errors.push({
+              ...item,
+              ...errorResponse(
+                "Not Found",
+                `Please provide valid details. Failed on foreign constraint fields.`
+              ),
+            })
+          } else if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2025"
+          ) {
+            errors.push({
+              ...item,
+              ...errorResponse("Not Found", err.meta.cause),
+            })
+          } else {
+            errors.push({
+              ...item,
+              ...errorResponse(
+                "Bad Request",
+                `Something wrong went with request.${err.meta.cause}`
+              ),
+            })
+          }
+        })
+    }
+
+    return toResult({ success: success, errors: errors }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.meta.cause))
+    } else {
+      logger.warn(`updateMarksOfAllStudentsForCourse(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Create the marks of group of students for a course
+ * @param {Number} teacherId
+ * @param {Number} courseId
+ * @param {Object} marks
+ * @returns array of successfull and failed marks creation
+ */
+async function addMarksOfAllStudentsForCourse(teacherId = 0, courseId, marks) {
+  try {
+    const batchId = await getLatestBatch()
+
+    if (batchId.err !== null) {
+      return batchId
+    }
+
+    const success = []
+    const errors = []
+    for (const item of marks) {
+      await db.studentMarks
+        .create({
+          data: {
+            studentId: item.studentId,
+            courseId: courseId,
+            batchId: batchId.result.id,
+            theory: item.theory,
+            practical: item.practical,
+            NotQualified: item.notQualified,
+            teacherId: teacherId > 0 ? teacherId : undefined,
+          },
+        })
+        .then((response) => success.push({ ...response }))
+        .catch((err) => {
+          if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2002"
+          ) {
+            errors.push({
+              ...item,
+              ...errorResponse(
+                "Conflict",
+                `Resource already exists. Please update method to update the resource.`
+              ),
+            })
+          } else if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2003"
+          ) {
+            errors.push({
+              ...item,
+              ...errorResponse(
+                "Not Found",
+                `Please provide valid details. Failed on foreign constraint fields.`
+              ),
+            })
+          } else {
+            errors.push({
+              ...item,
+              ...errorResponse(
+                "Bad Request",
+                `Something wrong went with request.${err.message}`
+              ),
+            })
+          }
+        })
+    }
+
+    return toResult({ success: success, errors: errors }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.meta.cause))
+    } else {
+      logger.warn(err)
+      logger.warn(`addMarksOfAllStudentsForCourse(): ${err}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
 module.exports = {
   getTeacherCourses,
   isTaughtBy,
   addMarksByTeacher,
   viewMarksByTeacher,
   updateMarksOfStudent,
+  updateMarksOfAllStudentsForCourse,
+  addMarksOfAllStudentsForCourse,
 }
