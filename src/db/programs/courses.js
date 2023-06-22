@@ -5,7 +5,11 @@
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../../helper/logger")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  NotFoundError,
+} = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 const { getLatestBatch } = require("./others")
 
@@ -426,6 +430,102 @@ async function removeCourseFromTeacher(teacherId, courseId, programId) {
     }
   }
 }
+
+/**
+ * List all courses in the database
+ * @param {Number} programId
+ * @param {Number} syllabusId
+ * @returns all the courses matching the criteria
+ */
+async function listAllCourses(programId = 0, syllabusId = 0) {
+  try {
+    const courses = await db.course.findMany({
+      where: {
+        ProgramCourses: {
+          some: {
+            programId: programId > 0 ? programId : undefined,
+            syllabusId: syllabusId > 0 ? syllabusId : undefined,
+          },
+        },
+      },
+      include: {
+        ProgramCourses: {
+          include: {
+            syllabus: { include: { program: true } },
+          },
+        },
+        markWeightage: true,
+        TeacherCourses: true,
+      },
+    })
+    return toResult(courses, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse(
+          "Bad Request",
+          `Something wrong with the request. ${err.meta.cause}`
+        )
+      )
+    } else {
+      logger.warn(`listAllCourses(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
+/**
+ * Fetch a certain course
+ * @param {Number} courseId
+ * @param {String} courseCode
+ *
+ * @returns detail of the course or corresponding error
+ */
+async function getCourse(courseId = 0, courseCode = "") {
+  try {
+    const courses = await db.course.findFirstOrThrow({
+      where: {
+        id: courseId > 0 ? courseId : undefined,
+        code: courseCode === "" ? undefined : courseCode,
+      },
+      include: {
+        ProgramCourses: {
+          include: {
+            syllabus: { include: { program: true } },
+          },
+        },
+        markWeightage: true,
+        TeacherCourses: true,
+      },
+    })
+    return toResult(courses, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        NotFoundError("The requested course does not exist.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse(
+          "Bad Request",
+          `Something wrong with the request. ${err.meta.cause}`
+        )
+      )
+    } else {
+      logger.warn(`getCourse(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError)
+    }
+  }
+}
+
 module.exports = {
   addMarkWeightage,
   deleteMarkWeightage,
@@ -437,4 +537,6 @@ module.exports = {
   removeCourseFromSyllabus,
   assignCourseToTeacher,
   removeCourseFromTeacher,
+  listAllCourses,
+  getCourse,
 }

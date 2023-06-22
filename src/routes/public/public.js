@@ -3,7 +3,7 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { responseStatusCode } = require("../../helper/error")
+const { responseStatusCode, badRequestError } = require("../../helper/error")
 const {
   getFaculties,
   getFacultyById,
@@ -15,13 +15,14 @@ const {
   getAllSyllabus,
   getSyllabusOfProgram,
 } = require("../../db/programs/others")
+const { listAllCourses, getCourse } = require("../../db/programs/courses")
 
 //get all faculties
 router.get("/faculties", async function (req, res) {
   const faculties = await getFaculties()
   if (faculties.err !== null) {
     res
-      .status(responseStatusCode(faculties.err.error.title) || 400)
+      .status(responseStatusCode.get(faculties.err.error.title) || 400)
       .json(faculties.err)
     return
   }
@@ -33,6 +34,11 @@ router.get("/faculties", async function (req, res) {
 //get an individual faculty
 router.get("/faculties/:id", async function (req, res) {
   const { id } = req.params
+
+  if (Number(id) === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
 
   const faculties = await getFacultyById(Number(id) || 0)
   if (faculties.err !== null) {
@@ -51,7 +57,9 @@ router.get("/faculties/:id", async function (req, res) {
 router.get("/departments", async function (req, res) {
   const depts = await getDepartments()
   if (depts.err !== null) {
-    res.status(responseStatusCode(depts.err.error.title) || 400).json(depts.err)
+    res
+      .status(responseStatusCode.get(depts.err.error.title) || 400)
+      .json(depts.err)
     return
   }
 
@@ -65,6 +73,11 @@ router.get("/departments", async function (req, res) {
 //get an individual department
 router.get("/departments/:id", async function (req, res) {
   const { id } = req.params
+
+  if (Number(id) === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
 
   const dept = await getDepartmentById(Number(id) || 0)
   if (dept.err !== null) {
@@ -85,7 +98,7 @@ router.get("/programs", async function (req, res) {
   if (programs.err !== null) {
     res
       .header("Cache-Control", "public, max-age=604800")
-      .status(responseStatusCode(programs.err.error.title) || 400)
+      .status(responseStatusCode.get(programs.err.error.title) || 400)
       .json(programs.err)
     return
   }
@@ -97,6 +110,11 @@ router.get("/programs", async function (req, res) {
 //get an individual program
 router.get("/programs/:id", async function (req, res) {
   const { id } = req.params
+
+  if (Number(id) === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
 
   const program = await getProgramById(Number(id) || 0)
   if (program.err !== null) {
@@ -124,7 +142,7 @@ router.get("/syllabus", async function (req, res) {
   }
   if (syallbus.err !== null) {
     res
-      .status(responseStatusCode(syallbus.err.error.title) || 400)
+      .status(responseStatusCode.get(syallbus.err.error.title) || 400)
       .json(syallbus.err)
     return
   }
@@ -139,6 +157,11 @@ router.get("/syllabus", async function (req, res) {
 //get an individual syllabus
 router.get("/syllabus/:id", async function (req, res) {
   const { id } = req.params
+
+  if (Number(id) === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
 
   const syallbus = await getSyllabusById(Number(id) || 0)
   if (syallbus.err !== null) {
@@ -155,4 +178,48 @@ router.get("/syllabus/:id", async function (req, res) {
   return
 })
 
+//get all courses
+router.get("/courses", async function (req, res) {
+  const programId = Number(req.query.program_id) || 0
+  const syallbusId = Number(req.query.syallbus_id) || 0
+
+  const courses = await listAllCourses(programId, syallbusId)
+
+  if (courses.err !== null) {
+    res
+      .status(responseStatusCode.get(courses.err.error.title) || 400)
+      .json(courses.err)
+    return
+  }
+
+  res
+    .header("Cache-Control", "public, max-age=604800")
+    .status(200)
+    .json(courses.result)
+  return
+})
+
+//get a course
+router.get("/courses/:id", async function (req, res) {
+  const courseId = Number(req.params.id)
+
+  if (courseId === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
+  const courses = await getCourse(courseId)
+
+  if (courses.err !== null) {
+    res
+      .status(responseStatusCode.get(courses.err.error.title) || 400)
+      .json(courses.err)
+    return
+  }
+
+  res
+    .header("Cache-Control", "public, max-age=604800")
+    .status(200)
+    .json(courses.result)
+  return
+})
 module.exports = router
