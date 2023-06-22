@@ -7,6 +7,7 @@ const db = new PrismaClient()
 const logger = require("../../helper/logger")
 const { errorResponse, internalServerError } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
+const { getLatestBatch } = require("./others")
 
 /**
  * Add a markweightage entry
@@ -318,6 +319,113 @@ async function removeCourseFromSyllabus(
   }
 }
 
+/**
+ * Assign course to a teacher
+ * @param {*} teacherId
+ * @param {*} courseId
+ * @param {*} programId
+ * @returns
+ */
+async function assignCourseToTeacher(teacherId, courseId, programId) {
+  try {
+    const batchId = await getLatestBatch()
+
+    if (batchId.err !== null) {
+      return batchId
+    }
+
+    const assignCourse = await db.teacherCourses.create({
+      data: {
+        courseId: courseId,
+        programId: programId,
+        teacherId: teacherId,
+        batchId: batchId.result.id,
+      },
+      include: { batch: true, course: true, program: true, teacher: true },
+    })
+
+    return toResult(assignCourse, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else {
+      logger.warn(`addCourse(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Remove course assignment from a teacher
+ * @param {Number} teacherId
+ * @param {Number} courseId
+ * @param {Number} programId
+ * @returns
+ */
+async function removeCourseFromTeacher(teacherId, courseId, programId) {
+  try {
+    const batchId = await getLatestBatch()
+
+    if (batchId.err !== null) {
+      return batchId
+    }
+
+    const removeCourse = await db.teacherCourses.delete({
+      where: {
+        teacherId_courseId_programId_batchId: {
+          teacherId: teacherId,
+          courseId: courseId,
+          programId: programId,
+          batchId: batchId.result.id,
+        },
+      },
+      include: { batch: true, course: true, program: true, teacher: true },
+    })
+
+    return toResult(removeCourse, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.meta.cause))
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else {
+      logger.warn(`addCourse(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
 module.exports = {
   addMarkWeightage,
   deleteMarkWeightage,
@@ -327,4 +435,6 @@ module.exports = {
   deleteCourse,
   addCourseToSyllabus,
   removeCourseFromSyllabus,
+  assignCourseToTeacher,
+  removeCourseFromTeacher,
 }

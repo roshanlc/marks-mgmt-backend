@@ -15,6 +15,8 @@ const {
   deleteCourse,
   addCourseToSyllabus,
   removeCourseFromSyllabus,
+  assignCourseToTeacher,
+  removeCourseFromTeacher,
 } = require("../../../db/programs/courses")
 
 // schema for faculty
@@ -232,4 +234,72 @@ router.delete("/:id/remove", async function (req, res) {
   res.status(200).json(removeCourse.result)
   return
 })
+
+const teacherAssign = Joi.object({
+  programId: Joi.number().required().positive(),
+  teacherId: Joi.number().required().positive(),
+})
+
+// Assign a course to a teacher
+router.post("/:id/teacher", async function (req, res) {
+  const courseId = Number(req.params.id) || 0
+
+  if (courseId === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
+
+  // validate schema
+  const err = teacherAssign.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  // assign course to a program syllabus
+  const { programId, teacherId } = req.body
+  const assign = await assignCourseToTeacher(teacherId, courseId, programId)
+  // check for error
+  if (assign.err !== null) {
+    res.status(responseStatusCode.get(assign.err.error.title)).json(assign.err)
+    return
+  }
+
+  res.status(201).json(assign.result)
+  return
+})
+
+// Remove a course from a teacher
+router.delete("/:id/teacher", async function (req, res) {
+  const courseId = Number(req.params.id) || 0
+
+  if (courseId === 0) {
+    res.status(400).json(badRequestError("Provide a valid course id."))
+    return
+  }
+
+  // validate schema
+  const err = teacherAssign.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  // assign course to a program syllabus
+  const { programId, teacherId } = req.body
+  const assign = await removeCourseFromTeacher(teacherId, courseId, programId)
+  // check for error
+  if (assign.err !== null) {
+    res.status(responseStatusCode.get(assign.err.error.title)).json(assign.err)
+    return
+  }
+
+  res.status(200).json(assign.result)
+  return
+})
+
 module.exports = router
