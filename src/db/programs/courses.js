@@ -209,6 +209,115 @@ async function deleteCourse(courseId = 0, code = "") {
   }
 }
 
+/**
+ * Add a course to a program syllabus
+ * @param {Number} courseId
+ * @param {Number} programId
+ * @param {Number} syllabusId
+ * @param {Number} semesterId
+ * @returns course details or corresponding error
+ */
+async function addCourseToSyllabus(
+  courseId,
+  programId,
+  syllabusId,
+  semesterId
+) {
+  try {
+    const assignCourse = await db.programCourses.create({
+      data: {
+        courseId: courseId,
+        programId: programId,
+        syllabusId: syllabusId,
+        semesterId: semesterId,
+      },
+      include: { syllabus: { include: { program: true } } },
+    })
+
+    return toResult(assignCourse, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else {
+      logger.warn(`addCourse(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Remove a course from a program syllabus
+ * @param {Number} courseId
+ * @param {Number} programId
+ * @param {Number} syllabusId
+ * @param {Number} semesterId
+ *
+ * @returns course details or corresponding error
+ */
+async function removeCourseFromSyllabus(
+  courseId,
+  programId,
+  syllabusId,
+  semesterId
+) {
+  try {
+    const assignCourse = await db.programCourses.delete({
+      where: {
+        programId_semesterId_syllabusId_courseId: {
+          courseId: courseId,
+          semesterId: semesterId,
+          syllabusId: syllabusId,
+          programId: programId,
+        },
+      },
+      include: { syllabus: { include: { program: true } } },
+    })
+
+    return toResult(assignCourse, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.meta.cause))
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else {
+      logger.warn(`addCourse(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   addMarkWeightage,
   deleteMarkWeightage,
@@ -216,4 +325,6 @@ module.exports = {
   listAllMarkWeightage,
   updateCourse,
   deleteCourse,
+  addCourseToSyllabus,
+  removeCourseFromSyllabus,
 }
