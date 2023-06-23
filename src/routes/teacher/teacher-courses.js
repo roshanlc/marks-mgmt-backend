@@ -23,6 +23,7 @@ const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
 const { getAStudentDetails } = require("../../db/students/students")
 const { array } = require("joi")
+const { getStudentMarksByCourse } = require("../../db/students/student-marks")
 
 // Endpoint for teacher to fetch courses they teach
 router.get("/courses", async function (req, res) {
@@ -377,6 +378,66 @@ router.post("/marks/all", async function (req, res) {
   }
 
   res.status(200).json(createdMarks.result)
+  return
+})
+
+// Endpoint for teacher to view marks of a student for a course
+router.get("/marks", async function (req, res) {
+  const courseId = Number(req.query.course_id) || 0
+  const studentId = Number(req.query.student_id) || 0
+  if (courseId === 0 || studentId === 0) {
+    res
+      .status(400)
+      .json(errorResponse("Bad Request", "Insufficient request parameters."))
+    return
+  }
+  const tokenDetails = extractTokenDetails(req)
+  // get teacher id
+  const teacherId = await userDB.getTeacherId(tokenDetails.id)
+
+  if (teacherId.err !== null) {
+    res
+      .status(responseStatusCode.get(teacherId.err.error.title) || 400)
+      .json(teacherId.err)
+    return
+  }
+
+  const student = await getAStudentDetails(0, studentId)
+  if (student.err !== null) {
+    res
+      .status(responseStatusCode.get(student.err.error.title) || 400)
+      .json(student.err)
+    return
+  }
+
+  // does this teacher teach this course
+  const teaches = await isTaughtBy(
+    teacherId.result.id,
+    student.result.programId,
+    courseId
+  )
+
+  if (teaches.err !== null) {
+    res
+      .status(responseStatusCode.get(teaches.err.error.title) || 400)
+      .json(teaches.err)
+    return
+  }
+  // check if the course is taught by this teacher
+  if (!teaches.result) {
+    res.status(403).json(forbiddenError())
+    return
+  }
+
+  const marks = await getStudentMarksByCourse(studentId, "", "", courseId)
+  if (marks.err !== null) {
+    res
+      .status(responseStatusCode.get(marks.err.error.title) || 400)
+      .json(marks.err)
+    return
+  }
+
+  res.status(200).json(marks.result)
   return
 })
 

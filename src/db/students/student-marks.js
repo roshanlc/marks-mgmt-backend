@@ -206,7 +206,8 @@ async function getStudentMarksBySemester(studentId, semesterId) {
 async function getStudentMarksByCourse(
   studentId,
   courseCode = "",
-  courseName = ""
+  courseName = "",
+  courseId = 0
 ) {
   try {
     // fetch student details
@@ -231,7 +232,9 @@ async function getStudentMarksByCourse(
         AND: {
           programId: studentDetails.programId,
           syllabusId: syllabusId,
-          course: { OR: [{ code: courseCode }, { name: courseName }] },
+          course: {
+            OR: [{ code: courseCode }, { name: courseName }, { id: courseId }],
+          },
         },
       },
       include: { course: true },
