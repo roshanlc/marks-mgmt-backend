@@ -14,6 +14,8 @@ const {
   getSyllabusById,
   getAllSyllabus,
   getSyllabusOfProgram,
+  getBatchById,
+  listAllBatch,
 } = require("../../db/programs/others")
 const { listAllCourses, getCourse } = require("../../db/programs/courses")
 
@@ -220,6 +222,36 @@ router.get("/courses/:id", async function (req, res) {
     .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(courses.result)
+  return
+})
+
+// list all batch
+router.get("/batch", async function (req, res) {
+  const batch = await listAllBatch()
+
+  if (batch.err !== null) {
+    res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
+    return
+  }
+
+  res.status(200).json(batch.result)
+  return
+})
+
+// get an individual batch
+router.get("/batch/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id === 0) {
+    res.status(400).json(badRequestError("Please provide a valid batch id"))
+  }
+  const batch = await getBatchById(id)
+
+  if (batch.err !== null) {
+    res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
+    return
+  }
+
+  res.status(200).json(batch.result)
   return
 })
 module.exports = router

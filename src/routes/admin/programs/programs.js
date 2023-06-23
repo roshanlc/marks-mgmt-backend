@@ -1,6 +1,10 @@
 const { Router } = require("express")
 const router = Router()
-const { responseStatusCode, errorResponse } = require("../../../helper/error")
+const {
+  responseStatusCode,
+  errorResponse,
+  badRequestError,
+} = require("../../../helper/error")
 const Joi = require("joi")
 const {
   addFaculty,
@@ -10,6 +14,12 @@ const {
   addLevel,
 } = require("../../../db/programs/programs")
 const { escapeColon } = require("../../../helper/utils")
+const {
+  addBatch,
+  listAllBatch,
+  getBatchById,
+  deleteBatchById,
+} = require("../../../db/programs/others")
 
 // schema for faculty
 const facultySchema = Joi.object({
@@ -156,6 +166,50 @@ router.post("/level", async function (req, res) {
   }
 
   res.status(201).json(level.result)
+  return
+})
+
+const batchSchema = Joi.object({
+  year: Joi.number().required().positive().min(2000),
+  season: Joi.string().required().valid("FALL", "WINTER", "SPRING", "SUMMER"),
+})
+
+// create a new batch
+router.post("/batch", async function (req, res) {
+  const err = batchSchema.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  const { year, season } = req.body
+  const batch = await addBatch(year, season)
+
+  if (batch.err !== null) {
+    res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
+    return
+  }
+
+  res.status(201).json(batch.result)
+  return
+})
+
+// delete a batch
+router.delete("/batch/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id === 0) {
+    res.status(400).json(badRequestError("Please provide a valid batch id"))
+  }
+  const batch = await deleteBatchById(id)
+
+  if (batch.err !== null) {
+    res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
+    return
+  }
+
+  res.status(200).json(batch.result)
   return
 })
 

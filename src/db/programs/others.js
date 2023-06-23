@@ -6,7 +6,11 @@
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../../helper/logger")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  badRequestError,
+} = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 
 /**
@@ -37,6 +41,91 @@ async function addBatch(year, season) {
     }
     logger.warn(`addBatch(): ${err.message}`) // Always log cases for internal server error
     return toResult(null, internalServerError())
+  }
+}
+
+/**
+ *
+ * @returns All batch in table
+ */
+async function listAllBatch() {
+  try {
+    const batchInfo = await db.batch.findMany()
+    return toResult(batchInfo, null)
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong went with request. ${err?.message}`)
+      )
+    }
+    logger.warn(`listAllBatch(): ${err.message}`) // Always log cases for internal server error
+    return toResult(null, internalServerError())
+  }
+}
+
+/**
+ * List of all batch in table
+ * @returns All batch in table
+ */
+async function getBatchById(batchId) {
+  try {
+    const batch = await db.batch.findFirstOrThrow({
+      where: { id: batchId },
+    })
+    return toResult(batch, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No such entry found in the batch table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getBatchById(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delete a batch by id
+ * @param {Number} batchId - id of the batch
+ * @returns deleted batch or corresponding error
+ */
+async function deleteBatchById(batchId) {
+  try {
+    const batch = await db.batch.delete({
+      where: { id: batchId },
+    })
+    return toResult(batch, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No such entry found in the batch table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteBatchById(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
   }
 }
 
@@ -363,4 +452,7 @@ module.exports = {
   getAllSyllabus,
   getSyllabusById,
   getSyllabusOfProgram,
+  listAllBatch,
+  getBatchById,
+  deleteBatchById,
 }
