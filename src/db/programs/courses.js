@@ -345,7 +345,12 @@ async function assignCourseToTeacher(teacherId, courseId, programId) {
         teacherId: teacherId,
         batchId: batchId.result.id,
       },
-      include: { batch: true, course: true, program: true, teacher: true },
+      include: {
+        batch: true,
+        course: { include: { markWeightage: true } },
+        program: true,
+        teacher: true,
+      },
     })
 
     return toResult(assignCourse, null)
@@ -403,7 +408,12 @@ async function removeCourseFromTeacher(teacherId, courseId, programId) {
           batchId: batchId.result.id,
         },
       },
-      include: { batch: true, course: true, program: true, teacher: true },
+      include: {
+        batch: true,
+        course: { include: { markWeightage: true } },
+        program: true,
+        teacher: true,
+      },
     })
 
     return toResult(removeCourse, null)

@@ -50,6 +50,7 @@ async function getTeacherCourses(teacherId) {
                 syllabus: true,
               },
             },
+            markWeightage: true,
           },
         },
       },
