@@ -5,7 +5,11 @@
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../../helper/logger")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  badRequestError,
+} = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 
 /**
@@ -298,9 +302,210 @@ async function getStudentSyllabus(studentId) {
   }
 }
 
+/**
+ * Inserts marks of a students for courses upto a given semester
+ * @param {*} studentId
+ * @param {*} from - start semester id
+ * @param {*} to - end semester id
+ * @param {*} batchId
+ * @returns marks object or corresponding error
+ */
+async function createMarksForSemesters(studentId, from, to, batchId = 0) {
+  try {
+    const studentDetails = await db.student.findFirstOrThrow({
+      where: { id: studentId },
+      include: { program: { include: { ProgramSemesters: true } } },
+    })
+
+    const maxSem = studentDetails.program.ProgramSemesters[0].semesterId || 0
+
+    if (maxSem === 0) {
+      throw "Max semester for the sudent program found to be 0."
+    } else if (to > maxSem) {
+      return toResult(
+        null,
+        badRequestError(
+          `Max semester for the program ${maxSem} is less than provided to semester ${to}`
+        )
+      )
+    }
+
+    // fetch program courses
+    const programCourses = await db.programCourses.findMany({
+      where: {
+        syllabusId: studentDetails.syllabusId,
+        semesterId: { lte: to },
+      },
+    })
+
+    const marks = []
+
+    // create queries to create marks
+    for (const course of programCourses) {
+      marks.push(
+        db.studentMarks.create({
+          data: {
+            courseId: course.courseId,
+            studentId: studentDetails.id,
+            batchId: batchId > 0 ? batchId : null,
+            theory: 0,
+            practical: 0,
+            NotQualified: false,
+          },
+        })
+      )
+    }
+
+    const result = await db.$transaction([...marks])
+
+    return toResult(result, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`createMarksForSemesters(): ${err}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delete marks of a student for a course
+ * @param {*} studentId
+ * @param {*} courseId
+ * @returns deleted marks or corresponding error
+ */
+async function deleteMarksOfStudentForCourse(studentId, courseId) {
+  try {
+    if (courseId <= 0) {
+      return toResult(null, badRequestError("Provide a valid course id"))
+    }
+
+    const deletedMarks = await db.studentMarks.deleteMany({
+      where: {
+        studentId: studentId,
+        courseId: courseId,
+      },
+    })
+
+    return toResult(deletedMarks, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteMarksOfStudentForCourse(): ${err}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delte marks of a student for given semesters criteria
+ * @param {*} studentId - id of student
+ * @param {*} from - start semester
+ * @param {*} to - end semester
+ * @returns deleted marks or corresponding error
+ */
+async function deleteMarksOfStudentForSemesters(studentId, from, to) {
+  try {
+    const studentDetails = await db.student.findFirstOrThrow({
+      where: { id: studentId },
+      include: { program: { include: { ProgramSemesters: true } } },
+    })
+
+    // fetch max sem for the program student is enrolled
+    const maxSem = studentDetails.program.ProgramSemesters[0].semesterId || 0
+
+    if (maxSem === 0) {
+      throw "Max semester for the sudent program found to be 0."
+    } else if (to > maxSem) {
+      return toResult(
+        null,
+        badRequestError(
+          `Max semester for the program ${maxSem} is less than provided to semester ${to}`
+        )
+      )
+    }
+
+    // fetch program courses
+    const programCourses = await db.programCourses.findMany({
+      where: {
+        syllabusId: studentDetails.syllabusId,
+        semesterId: { gte: from, lte: to },
+      },
+    })
+
+    // empty array to store marks deletion promises
+    const marks = []
+
+    // create queries to delete marks
+    for (const course of programCourses) {
+      marks.push(
+        db.studentMarks.delete({
+          where: {
+            studentId_courseId: {
+              studentId: studentDetails.id,
+              courseId: course.courseId,
+            },
+          },
+        })
+      )
+    }
+
+    const result = await db.$transaction([...marks])
+
+    return toResult(result, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.meta.cause))
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteMarksOfStudentForCourse(): ${err}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   getStudentMarks,
   getStudentMarksBySemester,
   getStudentMarksByCourse,
   getStudentSyllabus,
+  createMarksForSemesters,
+  deleteMarksOfStudentForCourse,
+  deleteMarksOfStudentForSemesters,
 }

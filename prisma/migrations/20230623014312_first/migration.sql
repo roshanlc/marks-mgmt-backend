@@ -194,7 +194,7 @@ CREATE TABLE "StudentMarks" (
     "studentId" INTEGER NOT NULL,
     "courseId" INTEGER NOT NULL,
     "teacherId" INTEGER,
-    "batchId" INTEGER NOT NULL,
+    "batchId" INTEGER,
 
     CONSTRAINT "StudentMarks_pkey" PRIMARY KEY ("studentId","courseId")
 );
@@ -353,7 +353,7 @@ ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_courseId_fkey" FOREIGN K
 ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
