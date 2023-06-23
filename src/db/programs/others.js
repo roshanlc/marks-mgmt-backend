@@ -36,7 +36,7 @@ async function addBatch(year, season) {
       )
     }
     logger.warn(`addBatch(): ${err.message}`) // Always log cases for internal server error
-    return toResult(null, internalServerError)
+    return toResult(null, internalServerError())
   }
 }
 
@@ -62,7 +62,7 @@ async function getLatestBatch() {
       )
     } else {
       logger.warn(`getLatestBatch(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -83,7 +83,7 @@ async function getFaculties() {
       )
     } else {
       logger.warn(`getFaculties(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -114,7 +114,7 @@ async function getFacultyById(facultyId = 0, facultyName = "") {
       )
     } else {
       logger.warn(`getFacultyById(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -138,7 +138,7 @@ async function getDepartments() {
       )
     } else {
       logger.warn(`getDepartments(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -171,7 +171,7 @@ async function getDepartmentById(deptId = 0, deptName = "") {
       )
     } else {
       logger.warn(`getDepartmentById(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -201,7 +201,7 @@ async function getPrograms() {
       )
     } else {
       logger.warn(`getPrograms(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -242,7 +242,7 @@ async function getProgramById(programId = 0, programName = "") {
       )
     } else {
       logger.warn(`getProgramById(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -273,7 +273,7 @@ async function getAllSyllabus() {
       )
     } else {
       logger.warn(`getAllSyallabus(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -315,7 +315,7 @@ async function getSyllabusById(syallabusId = 0, syallabusName = "") {
       )
     } else {
       logger.warn(`getSyllabusById(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -347,7 +347,7 @@ async function getSyllabusOfProgram(programId) {
       )
     } else {
       logger.warn(`getSyllabusOfProgram(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }

@@ -98,7 +98,7 @@ async function getStudentMarks(studentId) {
       )
     } else {
       logger.warn(`getStudentMarks(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -193,7 +193,7 @@ async function getStudentMarksBySemester(studentId, semesterId) {
       )
     } else {
       logger.warn(`getStudentMarksBySemester(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -258,7 +258,7 @@ async function getStudentMarksByCourse(
       return toResult(null, errorResponse("Not Found", err.message))
     } else {
       logger.warn(`getStudentMarks(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -297,7 +297,7 @@ async function getStudentSyllabus(studentId) {
       )
     } else {
       logger.warn(`getStudentSyllabus(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }

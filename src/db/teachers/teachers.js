@@ -27,7 +27,7 @@ async function listAllTeachers() {
       )
     } else {
       logger.warn(`listAllTeachers(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -65,7 +65,7 @@ async function listTeachersBy(programId = 0, departmentId = 0) {
       )
     } else {
       logger.warn(`listTeachersBy(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -109,7 +109,7 @@ async function getATeacherDetails(userId = 0, teacherId = 0) {
       )
     } else {
       logger.warn(`getATeacherDetails(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -143,7 +143,7 @@ async function getAllTeachersCount() {
       )
     } else {
       logger.warn(`getAllTeachersCount(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }

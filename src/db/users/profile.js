@@ -54,7 +54,7 @@ async function getProfileDetails(userId) {
       )
     } else {
       logger.warn(`getUserDetails(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }

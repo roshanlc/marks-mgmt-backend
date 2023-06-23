@@ -40,7 +40,7 @@ async function getUserRoles(userId) {
     return toResult(userRoles, null)
   } catch (err) {
     logger.warn(`getUserRoles(): ${err.message}`) // Always log cases for internal server error
-    return toResult(null, internalServerError)
+    return toResult(null, internalServerError())
   }
 }
 

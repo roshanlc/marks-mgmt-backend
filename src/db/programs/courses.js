@@ -471,7 +471,7 @@ async function listAllCourses(programId = 0, syllabusId = 0) {
       )
     } else {
       logger.warn(`listAllCourses(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -521,7 +521,7 @@ async function getCourse(courseId = 0, courseCode = "") {
       )
     } else {
       logger.warn(`getCourse(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }

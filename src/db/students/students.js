@@ -29,7 +29,7 @@ async function listAllStudents() {
       )
     } else {
       logger.warn(`listAllStudents(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -78,7 +78,7 @@ async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
       )
     } else {
       logger.warn(`listAllStudents(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -121,7 +121,7 @@ async function getAStudentDetails(userId = 0, studentId = 0) {
       )
     } else {
       logger.warn(`listAllStudents(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -170,7 +170,7 @@ async function getAllStudentsCount() {
       )
     } else {
       logger.warn(`getAllStudentsCount(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
@@ -223,7 +223,7 @@ async function getStudentsCountBy(
       )
     } else {
       logger.warn(`getStudentsCountBy(): ${err.message}`) // Always log cases for internal server error
-      return toResult(null, internalServerError)
+      return toResult(null, internalServerError())
     }
   }
 }
