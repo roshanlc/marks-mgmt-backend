@@ -40,6 +40,7 @@ async function getTeacherCourses(teacherId) {
         ],
       },
       include: {
+        batch: true,
         course: {
           include: {
             ProgramCourses: {
