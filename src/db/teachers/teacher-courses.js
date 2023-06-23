@@ -13,7 +13,6 @@ const {
 const { toResult } = require("../../helper/result")
 const { getLatestBatch } = require("../programs/others")
 const { NotFoundError } = require("../../helper/error")
-const { escapeColon } = require("../../helper/utils")
 
 /**
  * Get courses taught by a teacher
@@ -278,7 +277,10 @@ async function viewMarksByTeacher(teacherId, courseId, programId) {
         AND: [
           { courseId: courseId },
           { teacherId: teacherId },
-          { batchId: latestBatch.result.id },
+          {
+            batchId: latestBatch.result.id,
+            student: { programId: programId },
+          },
         ],
       },
       include: {
@@ -286,7 +288,15 @@ async function viewMarksByTeacher(teacherId, courseId, programId) {
       },
     })
 
-    return toResult({ marks: marks }, null)
+    return toResult(
+      {
+        teacherId: teacherId,
+        courseId: courseId,
+        programId: programId,
+        marks: marks,
+      },
+      null
+    )
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (

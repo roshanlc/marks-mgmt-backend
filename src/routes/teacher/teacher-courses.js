@@ -135,7 +135,7 @@ router.post("/marks", async function (req, res) {
 })
 
 // Endpoint for teacher to view marks of all students for a course
-router.get("/marks", async function (req, res) {
+router.get("/marks/all", async function (req, res) {
   const courseId = Number(req.query.course_id) || 0
   const programId = Number(req.query.program_id) || 0
   if (courseId === 0 || programId === 0) {
