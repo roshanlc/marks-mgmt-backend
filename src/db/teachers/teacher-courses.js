@@ -40,23 +40,25 @@ async function getTeacherCourses(teacherId) {
         ],
       },
       include: {
+        program: true,
         batch: true,
-        course: {
-          include: {
-            ProgramCourses: {
-              select: {
-                program: true,
-                semester: true,
-                syllabus: true,
-              },
-            },
-            markWeightage: true,
-          },
-        },
+        course: { include: { markWeightage: true } },
       },
     })
 
-    return toResult({ teacher: teacher, courses: courses }, null)
+    const updatedCourses = []
+    // add syllabus and semester info in the response
+    for (const course of courses) {
+      const syllabus = await db.programCourses.findFirstOrThrow({
+        where: { courseId: course.courseId, programId: course.programId },
+        include: { syllabus: true, semester: true },
+      })
+      course.semester = syllabus.semester
+      course.syllabus = syllabus.syllabus
+      updatedCourses.push(course)
+    }
+
+    return toResult({ teacher: teacher, courses: updatedCourses }, null)
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (
