@@ -11,6 +11,8 @@ const logger = require("../../helper/logger")
 const { compareHash, hashPassword } = require("../../helper/password")
 const { authenticationError, NotFoundError } = require("../../helper/error")
 const { assignRoleToUser } = require("./roles")
+const { createMarksForSemesters } = require("../students/student-marks")
+const { getLatestBatch } = require("../programs/others")
 
 /**
  * Get user details
@@ -323,6 +325,18 @@ async function addStudentWithUser(
     }
     student.user = user.result
     student.user.UserRoles = roleAssign.result
+
+    // get latest batch
+    const latestBatch = await getLatestBatch()
+
+    // try to create student marks and course assignment upto the provided semester
+    const courseMarks = await createMarksForSemesters(
+      student.id,
+      1,
+      semester,
+      latestBatch.err !== null ? 0 : latestBatch.result.id
+    )
+
     return toResult(student, null)
   } catch (err) {
     if (

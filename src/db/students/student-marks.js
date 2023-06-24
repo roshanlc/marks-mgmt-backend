@@ -11,6 +11,8 @@ const {
   badRequestError,
 } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
+const { getLatestBatch } = require("../programs/others")
+const { courses } = require("../../helper/seeder/courses")
 
 /**
  * Returns all the marks of a student grouped by semester
@@ -341,10 +343,30 @@ async function createMarksForSemesters(studentId, from, to, batchId = 0) {
       },
     })
 
+    let latestBatch = {}
+    if (batchId === 0) {
+      latestBatch = await getLatestBatch()
+      if (latestBatch.err !== null) {
+        return toResult(null, latestBatch.err)
+      }
+    }
+
+    // fetch teacher courses for the program and latest batch
+    const teacherCourses = await db.teacherCourses.findMany({
+      where: {
+        programId: studentDetails.programId,
+        batchId: batchId > 0 ? batchId : latestBatch?.result?.id,
+      },
+    })
+
     const marks = []
 
     // create queries to create marks
     for (const course of programCourses) {
+      // get teacher id for this course for the current batch
+      const teacher = teacherCourses.filter(
+        (x) => x.courseId === course.courseId
+      )
       marks.push(
         db.studentMarks.create({
           data: {
@@ -354,6 +376,7 @@ async function createMarksForSemesters(studentId, from, to, batchId = 0) {
             theory: 0,
             practical: 0,
             NotQualified: false,
+            teacherId: teacher.length > 0 ? teacher[0]?.teacherId : undefined,
           },
         })
       )
