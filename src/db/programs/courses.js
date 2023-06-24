@@ -338,6 +338,7 @@ async function assignCourseToTeacher(teacherId, courseId, programId) {
       return batchId
     }
 
+    // assign course to a teacher
     const assignCourse = await db.teacherCourses.create({
       data: {
         courseId: courseId,
@@ -351,6 +352,13 @@ async function assignCourseToTeacher(teacherId, courseId, programId) {
         program: true,
         teacher: true,
       },
+    })
+
+    // for the current batch, update the student marks's teacher column
+    // with this teacher
+    const updateStudentMarks = await db.studentMarks.updateMany({
+      where: { AND: [{ courseId: courseId }, { batchId: batchId.result.id }] },
+      data: { teacherId: teacherId },
     })
 
     return toResult(assignCourse, null)
