@@ -25,6 +25,7 @@ const listStudentsRouter = require("./routes/admin/students")
 const listTeachersRouter = require("./routes/admin/teachers")
 const academicDivisionRouter = require("./routes/admin/programs/programs")
 const coursesRouter = require("./routes/admin/programs/courses")
+const userDetailsRouter = require("./routes/admin/users")
 
 dotenv.config() // load .env config
 
@@ -112,6 +113,8 @@ app.use(
 )
 
 app.use("/api/v1/admin/courses", authHandler, adminRoleHandler, coursesRouter)
+
+app.use("/api/v1/admin/users", authHandler, adminRoleHandler, userDetailsRouter)
 
 // A basic endpoint to verify token validity
 // TODO: remove after project completion

@@ -20,7 +20,7 @@ async function getUserRoles(userId) {
   try {
     const userRoles = await db.userRoles.findMany({
       where: { userId: userId },
-      select: { role: { select: { id: true, name: true } } },
+      include: { role: { select: { id: true, name: true } } },
     })
 
     if (
