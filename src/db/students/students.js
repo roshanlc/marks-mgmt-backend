@@ -13,9 +13,11 @@ async function listAllStudents() {
   try {
     const students = await db.student.findMany({
       include: {
-        program: { select: { department: true, level: true } },
-        user: { select: { id: true, name: true } },
+        program: { include: { department: true, level: true } },
+        user: { select: { id: true, name: true, email: true } },
         syllabus: true,
+        semester: true,
+        StudentStatus: true,
       },
     })
 
@@ -45,26 +47,24 @@ async function listAllStudents() {
 async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
   // TODO: add support for listing by status
   try {
-    const options = []
-    // set options
-    if (programId > 0) {
-      options.push({ programId: programId })
-    }
-    if (syllabusId > 0) {
-      options.push({ syllabusId: syllabusId })
-    }
-    if (departmentId > 0) {
-      options.push({ program: { departmentId: departmentId } })
-    }
-
     const students = await db.student.findMany({
       where: {
-        AND: options,
+        AND: [
+          { programId: programId > 0 ? programId : undefined },
+          { syllabusId: syllabusId > 0 ? syllabusId : undefined },
+          {
+            program: {
+              departmentId: departmentId > 0 ? departmentId : undefined,
+            },
+          },
+        ],
       },
       include: {
-        program: { select: { department: true, level: true } },
-        user: { select: { id: true, name: true } },
+        program: { include: { department: true, level: true } },
+        user: { select: { id: true, name: true, email: true } },
         syllabus: true,
+        semester: true,
+        StudentStatus: true,
       },
     })
 
@@ -94,9 +94,11 @@ async function getAStudentDetails(userId = 0, studentId = 0) {
     const student = await db.student.findFirstOrThrow({
       where: { OR: [{ userId: userId }, { id: studentId }] },
       include: {
-        program: { select: { department: true, level: true } },
-        user: { select: { id: true, name: true } },
+        program: { include: { department: true, level: true } },
+        user: { select: { id: true, name: true, email: true } },
         syllabus: true,
+        semester: true,
+        StudentStatus: true,
       },
     })
 
