@@ -86,7 +86,7 @@ router.get("/", async function (req, res) {
 router.get("/:id", async function (req, res) {
   const id = Number(req.params.id) || 0
 
-  if (id === 0) {
+  if (id <= 0) {
     res.status(400).json(badRequestError("Please provide a valid student id."))
     return
   }
@@ -107,7 +107,7 @@ router.get("/:id", async function (req, res) {
 router.delete("/:id", async function (req, res) {
   const id = Number(req.params.id) || 0
 
-  if (id === 0) {
+  if (id <= 0) {
     res.status(400).json(badRequestError("Please provide a valid student id."))
     return
   }
@@ -196,7 +196,7 @@ router.post("/", async function (req, res) {
 router.put("/:id", async function (req, res) {
   const id = Number(req.params.id) || 0
 
-  if (id === 0) {
+  if (id <= 0) {
     res.status(400).json(badRequestError("Please provide a valid student id."))
     return
   }
