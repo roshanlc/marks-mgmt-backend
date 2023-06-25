@@ -14,6 +14,9 @@ async function listAllTeachers() {
     const teachers = await db.teacher.findMany({
       include: {
         user: { select: { id: true, name: true, email: true } },
+        TeacherCourses: {
+          include: { course: true, program: true, batch: true },
+        },
       },
     })
 
@@ -51,6 +54,11 @@ async function listTeachersBy(programId = 0, departmentId = 0) {
               departmentId: departmentId > 0 ? departmentId : undefined,
             },
           },
+        },
+      },
+      include: {
+        TeacherCourses: {
+          include: { course: true, program: true, batch: true },
         },
       },
     })
