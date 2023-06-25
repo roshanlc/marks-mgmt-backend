@@ -37,7 +37,7 @@ model User {
 
 // Table to map users with their roles
 model UserRoles {
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
   role   Role @relation(fields: [roleId], references: [id])
   roleId Int
@@ -211,7 +211,7 @@ model Student {
   puRegNo  String @unique
 
   semester      Semester        @relation(fields: [semesterId], references: [id])
-  user          User            @relation(fields: [userId], references: [id])
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   program       Program         @relation(fields: [programId], references: [id])
   syllabus      Syllabus        @relation(fields: [syllabusId], references: [id])
   semesterId    Int
@@ -225,7 +225,7 @@ model Student {
 // Details about  a teacher
 model Teacher {
   id             Int              @id @default(autoincrement())
-  user           User             @relation(fields: [userId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         Int
   StudentMarks   StudentMarks[]
   TeacherCourses TeacherCourses[]
@@ -235,14 +235,14 @@ model Teacher {
 
 model Admin {
   id   Int  @id @default(autoincrement())
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   userId Int
 }
 
 // Student and marks in a certain subject
 model StudentMarks {
-  student      Student  @relation(fields: [studentId], references: [id])
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course       Course   @relation(fields: [courseId], references: [id])
   teacher      Teacher? @relation(fields: [teacherId], references: [id])
   batch        Batch?   @relation(fields: [batchId], references: [id])
@@ -261,7 +261,7 @@ model StudentMarks {
 
 // Teacher and courses taught in a batch
 model TeacherCourses {
-  teacher Teacher @relation(fields: [teacherId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id])
   batch   Batch   @relation(fields: [batchId], references: [id])
   program Program @relation(fields: [programId], references: [id])
@@ -284,7 +284,7 @@ enum Status {
 
 // Status of an individual student
 model StudentStatus {
-  student   Student @relation(fields: [studentId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   status    Status
   studentId Int
 

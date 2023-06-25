@@ -230,10 +230,58 @@ async function getStudentsCountBy(
   }
 }
 
+/**
+ * Delete a student by student id
+ * @param {*} studentId - id of student
+ * @returns deleted student or corresponding error
+ */
+async function deleteStudent(studentId) {
+  try {
+    const userDetails = await db.student.findFirstOrThrow({
+      where: { id: studentId },
+    })
+
+    // all other user related details should be deleted automaticalyl
+    const student = await db.user.delete({
+      where: { id: userDetails.userId },
+      include: { Student: true },
+    })
+
+    // delte password entry from data
+    if (student.password) {
+      delete student.password
+    }
+
+    return toResult(student, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. ${err.message}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteStudent(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   listAllStudents,
   listStudentsBy,
   getAStudentDetails,
   getAllStudentsCount,
   getStudentsCountBy,
+  deleteStudent,
 }

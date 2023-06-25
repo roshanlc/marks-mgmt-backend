@@ -80,11 +80,14 @@ router.get("/", async function (req, res) {
 
 // get a student detail
 router.get("/:id", async function (req, res) {
-  const { id } = req.params
-  const allStudents = await studentsDb.getAStudentDetails(
-    Number(id) || 0,
-    Number(id) || 0
-  )
+  const id = Number(req.params.id) || 0
+
+  if (id === 0) {
+    res.status(400).json("Please provide a valid student id.")
+    return
+  }
+
+  const allStudents = await studentsDb.getAStudentDetails(id, id)
 
   if (allStudents.err !== null) {
     res
@@ -94,6 +97,27 @@ router.get("/:id", async function (req, res) {
   }
 
   res.status(200).json(allStudents.result)
+})
+
+// delete a student
+router.delete("/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+
+  if (id === 0) {
+    res.status(400).json("Please provide a valid student id.")
+    return
+  }
+
+  const student = await studentsDb.deleteStudent(id)
+  if (student.err !== null) {
+    res
+      .status(responseStatusCode.get(student.err.error.title) || 400)
+      .json(student.err)
+    return
+  }
+
+  res.status(200).json(student.result)
+  return
 })
 
 // schema for the new student payload
