@@ -3,6 +3,11 @@ const { PrismaClient, Prisma } = require("@prisma/client")
 const { toResult } = require("../../helper/result")
 const { errorResponse, internalServerError } = require("../../helper/error")
 const logger = require("../../helper/logger")
+const {
+  createMarksForSemesters,
+  deleteMarksOfStudentForSemesters,
+} = require("./student-marks")
+const { getLatestBatch } = require("../programs/others")
 const db = new PrismaClient()
 
 /**
@@ -277,6 +282,120 @@ async function deleteStudent(studentId) {
   }
 }
 
+/**
+ * Update details of a student
+ * @param {Number} studentId
+ * @param {Number} symbolNo
+ * @param {Number} puRegdNo
+ * @param {Number} semesterId
+ * @param {String} status - supported values: ACTIVE | ARCHIVE | DROPOUT
+ *
+ * @returns updated student details or corresponding error
+ */
+async function updateStudentDetails(
+  studentId,
+  symbolNo = 0,
+  puRegdNo = 0,
+  semesterId = 0, // upgrade or downgrade semesters
+  status = ""
+) {
+  try {
+    // TODO: Add support to change between programs or syllabus
+
+    const latestBatch = await getLatestBatch()
+
+    if (latestBatch.err !== null) {
+      return latestBatch
+    }
+
+    const oldDetails = await db.student.findFirstOrThrow({
+      where: { id: studentId },
+      include: { StudentStatus: true },
+    })
+
+    const newDetails = await db.student.update({
+      where: { id: studentId },
+      data: {
+        puRegNo: puRegdNo > 0 ? puRegdNo : undefined,
+        symbolNo: symbolNo > 0 ? symbolNo : undefined,
+        semesterId: semesterId > 0 ? semesterId : undefined,
+        StudentStatus: {
+          update: {
+            where: {
+              studentId_status: {
+                status: oldDetails.StudentStatus[0]?.status || undefined,
+                studentId: studentId,
+              },
+            },
+            data: { status: status !== "" ? status : undefined },
+          },
+        },
+      },
+    })
+
+    // upgrade or downgrade semester
+    // Downgrade will delete course marks of student of higher semesters
+    const semDiff = newDetails.semesterId - oldDetails.semesterId
+    if (semDiff > 0) {
+      // upgrade semester
+      const upgrade = await createMarksForSemesters(
+        studentId,
+        oldDetails.semesterId + 1,
+        newDetails.semesterId,
+        latestBatch.result.id
+      )
+
+      if (upgrade.err !== null) {
+        return upgrade
+      }
+    } else if (semDiff < 0) {
+      const downgrade = await deleteMarksOfStudentForSemesters(
+        studentId,
+        newDetails.semesterId + 1,
+        oldDetails.semesterId
+      )
+
+      if (downgrade.err !== null) {
+        return downgrade
+      }
+    }
+
+    return toResult({ student: newDetails }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          err.message || "Please provide valid details."
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`createMarksForSemesters(): ${err}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   listAllStudents,
   listStudentsBy,
@@ -284,4 +403,5 @@ module.exports = {
   getAllStudentsCount,
   getStudentsCountBy,
   deleteStudent,
+  updateStudentDetails,
 }

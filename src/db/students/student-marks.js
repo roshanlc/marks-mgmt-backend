@@ -339,7 +339,7 @@ async function createMarksForSemesters(studentId, from, to, batchId = 0) {
     const programCourses = await db.programCourses.findMany({
       where: {
         syllabusId: studentDetails.syllabusId,
-        semesterId: { lte: to },
+        semesterId: { gte: from, lte: to },
       },
     })
 

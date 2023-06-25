@@ -3,7 +3,11 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { responseStatusCode, errorResponse } = require("../../helper/error")
+const {
+  responseStatusCode,
+  errorResponse,
+  badRequestError,
+} = require("../../helper/error")
 const studentsDb = require("../../db/students/students")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
@@ -83,7 +87,7 @@ router.get("/:id", async function (req, res) {
   const id = Number(req.params.id) || 0
 
   if (id === 0) {
-    res.status(400).json("Please provide a valid student id.")
+    res.status(400).json(badRequestError("Please provide a valid student id."))
     return
   }
 
@@ -104,7 +108,7 @@ router.delete("/:id", async function (req, res) {
   const id = Number(req.params.id) || 0
 
   if (id === 0) {
-    res.status(400).json("Please provide a valid student id.")
+    res.status(400).json(badRequestError("Please provide a valid student id."))
     return
   }
 
@@ -188,4 +192,60 @@ router.post("/", async function (req, res) {
   return
 })
 
+// update a student's details
+router.put("/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+
+  if (id === 0) {
+    res.status(400).json(badRequestError("Please provide a valid student id."))
+    return
+  }
+
+  if (Object.keys(req.body).length === 0) {
+    res
+      .status(400)
+      .json(badRequestError("Please provide a valid request body."))
+    return
+  }
+
+  // requires custom validation since fields are optional
+  let { semester, puRegdNo, symbolNo, status } = req.body
+  if (semester === undefined) {
+    semester = 0
+  } else if (Number(semester) <= 0) {
+    res.status(400).json(badRequestError("Please provide a valid semester."))
+    return
+  }
+  if (puRegdNo === undefined) {
+    puRegdNo = ""
+  }
+
+  if (status === undefined) {
+    status = ""
+  }
+  if (symbolNo === undefined || symbolNo === "") {
+    symbolNo = ""
+  } else if (isNaN(Number(symbolNo)) || Number(symbolNo) <= 0) {
+    res.status(400).json(badRequestError("Please provide a valid symbol no."))
+    return
+  }
+
+  const student = await studentsDb.updateStudentDetails(
+    id,
+    symbolNo,
+    puRegdNo,
+    Number(semester),
+    status
+  )
+
+  if (student.err !== null) {
+    res
+      .status(responseStatusCode.get(student.err.error.title) || 400)
+      .json(student.err)
+    return
+  }
+
+  res.status(200).json(student.result)
+  return
+})
 module.exports = router
