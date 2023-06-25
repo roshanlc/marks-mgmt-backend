@@ -2,7 +2,7 @@ const students = [
   {
     email: "student1@pu.edu.np",
     password: "",
-    name: "Student Sharma",
+    name: "Student One",
     address: "Kathmandu",
     contactNo: "",
     activated: true,
@@ -18,7 +18,7 @@ const students = [
   {
     email: "student2@pu.edu.np",
     password: "",
-    name: "Student Sharma",
+    name: "Student Two",
     address: "Kathmandu",
     contactNo: "",
     activated: true,
@@ -37,7 +37,7 @@ const teachers = [
   {
     email: "teacher1@pu.edu.np",
     password: "",
-    name: "Teacher Sharma",
+    name: "Teacher One",
     address: "Kathmandu",
     contactNo: "",
     activated: true,
@@ -47,7 +47,7 @@ const teachers = [
   {
     email: "teacher2@pu.edu.np",
     password: "",
-    name: "Teacher Sharma",
+    name: "Teacher Two",
     address: "Kathmandu",
     contactNo: "",
     activated: true,
@@ -60,7 +60,7 @@ const admins = [
   {
     email: "admin1@pu.edu.np",
     password: "",
-    name: "Admin Sharma",
+    name: "Admin One",
     address: "Kathmandu",
     contactNo: "",
     activated: true,

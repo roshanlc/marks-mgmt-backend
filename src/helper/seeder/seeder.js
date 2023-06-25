@@ -12,14 +12,18 @@ const {
   programSemesters,
   programSyllabus,
 } = require("./programs")
-const { courses, markWeightage, old_comp_courses } = require("./courses")
+const { markWeightage, old_comp_courses } = require("./courses")
 const { admins, students, teachers } = require("./users.js")
 const {
   addStudentWithUser,
   addTeacherWithUser,
   addAdminWithUser,
 } = require("../../db/users/user")
-const { getProgramById, getSyllabusById } = require("../../db/programs/others")
+const {
+  getProgramById,
+  getSyllabusById,
+  addBatch,
+} = require("../../db/programs/others")
 const { assignRoleToUser } = require("../../db/users/roles")
 
 // prisma client
@@ -32,7 +36,7 @@ async function seedRoles() {
       data: roles,
     })
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedRoles(): Something went wrong: ${err.message}`)
   }
 }
 
@@ -64,7 +68,7 @@ async function seedDepartments() {
       })
     }
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedDepartments(): Something went wrong: ${err.message}`)
   }
 }
 
@@ -150,7 +154,7 @@ async function seedUsers() {
         }
       }
     } catch (err) {
-      logger.warn(`Something went wrong: ${err}`)
+      logger.warn(`seedUsers(): Something went wrong: ${err}`)
       console.log(err)
     }
   }
@@ -194,7 +198,7 @@ async function seedPrograms() {
       })
     }
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedPrograms(): Something went wrong: ${err.message}`)
   }
 }
 
@@ -267,7 +271,17 @@ async function seedCourses() {
       }
     }
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedCourses(): Something went wrong: ${err.message}`)
+  }
+}
+
+// Create batch
+async function createBatch() {
+  try {
+    const year = new Date().getFullYear()
+    await addBatch(year, "FALL")
+  } catch (err) {
+    logger.warn(`createBatch(): Something went wrong, ${err.message}`)
   }
 }
 
@@ -279,6 +293,8 @@ async function seedDatabase() {
     logger.info("The database seeding has started.")
     // seed the roles table at first
     await seedRoles()
+
+    await createBatch()
 
     await seedDepartments()
 
@@ -293,7 +309,7 @@ async function seedDatabase() {
     // TODO: Add student, teacher and admin from seedUser()
     // TODO: Assign courses to teachers, add marks for a student
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedDatabase(): Something went wrong: ${err.message}`)
   }
 }
 
