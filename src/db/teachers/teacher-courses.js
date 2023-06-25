@@ -65,10 +65,7 @@ async function getTeacherCourses(teacherId) {
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.name === "NotFoundError"
     ) {
-      return toResult(
-        null,
-        errorResponse("Not Found", "Please provide valid teacher id.")
-      )
+      return toResult(null, errorResponse("Not Found", err.message))
     } else {
       logger.warn(`getTeacherCourses(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())

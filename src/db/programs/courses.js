@@ -338,6 +338,11 @@ async function assignCourseToTeacher(teacherId, courseId, programId) {
       return batchId
     }
 
+    // check if the provided program has such a course or not
+    await db.programCourses.findFirstOrThrow({
+      where: { AND: [{ courseId: courseId }, { programId: programId }] },
+    })
+
     // assign course to a teacher
     const assignCourse = await db.teacherCourses.create({
       data: {
@@ -364,6 +369,11 @@ async function assignCourseToTeacher(teacherId, courseId, programId) {
     return toResult(assignCourse, null)
   } catch (err) {
     if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, NotFoundError(err.message))
+    } else if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === "P2002"
     ) {
