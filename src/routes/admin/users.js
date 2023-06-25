@@ -15,13 +15,14 @@ const {
 } = require("../../db/users/roles")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
+const { getUserDetails, listAllUsers } = require("../../db/users/user")
 const router = Router()
 
 // fetch roles of a user
 router.get("/:id/roles", async function (req, res) {
   const userId = Number(req.params.id) || 0
 
-  if (userId === 0) {
+  if (userId <= 0) {
     res.status(400).json(badRequestError("Please provide a proper user id."))
     return
   }
@@ -62,7 +63,7 @@ const roleSchema = Joi.object({
 router.put("/:id/roles", async function (req, res) {
   const userId = Number(req.params.id) || 0
 
-  if (userId === 0) {
+  if (userId <= 0) {
     res.status(400).json(badRequestError("Please provide a proper user id."))
     return
   }
@@ -94,7 +95,7 @@ router.put("/:id/roles", async function (req, res) {
 router.delete("/:id/roles", async function (req, res) {
   const userId = Number(req.params.id) || 0
 
-  if (userId === 0) {
+  if (userId <= 0) {
     res.status(400).json(badRequestError("Please provide a proper user id."))
     return
   }
@@ -119,6 +120,45 @@ router.delete("/:id/roles", async function (req, res) {
   }
 
   res.status(200).json(updateRole.result)
+  return
+})
+
+// fetch a user's details
+router.get("/:id", async function (req, res) {
+  const userId = Number(req.params.id) || 0
+
+  if (userId <= 0) {
+    res.status(400).json(badRequestError("Please provide a proper user id."))
+    return
+  }
+
+  const user = await getUserDetails(userId)
+
+  if (user.err !== null) {
+    res
+      .status(responseStatusCode.get(user.err.error.title) || 400)
+      .json(user.err)
+    return
+  }
+
+  res.status(200).json(user.result)
+  return
+})
+
+// fetch all users' details
+router.get("", async function (req, res) {
+  const roleId = Number(req.query.role_id) || 0
+
+  const users = await listAllUsers(roleId)
+
+  if (users.err !== null) {
+    res
+      .status(responseStatusCode.get(users.err.error.title) || 400)
+      .json(users.err)
+    return
+  }
+
+  res.status(200).json(users.result)
   return
 })
 

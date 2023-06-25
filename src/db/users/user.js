@@ -525,13 +525,70 @@ async function changePassword(userId, newPassword) {
     // return user details by id
     return await getUserDetails(userDetails.id)
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
       return toResult(
         null,
         badRequestError(`Something went wrong with request. ${err.message}`)
       )
     } else {
       logger.warn(`changePassword(): ${err.message}`)
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * List of all users
+ * @param {*} roleId - id of the role to filter list by
+ * @returns
+ */
+async function listAllUsers(roleId = 0) {
+  try {
+    let role = {}
+    const response = {}
+    if (roleId > 0) {
+      role = await db.role.findFirstOrThrow({
+        where: { id: roleId },
+        include: { _count: true },
+      })
+      response.role = role
+    }
+
+    // get list of users (by roleId if given)
+    const users = await db.user.findMany({
+      where: {
+        UserRoles: { some: { roleId: roleId > 0 ? roleId : undefined } },
+      },
+      include: {
+        UserRoles: {
+          select: {
+            role: true,
+          },
+        },
+      },
+    })
+
+    response.users = users
+
+    return toResult(response, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`listAllUsers(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())
     }
   }
@@ -548,4 +605,5 @@ module.exports = {
   addTeacherWithUser,
   addAdminWithUser,
   changePassword,
+  listAllUsers,
 }
