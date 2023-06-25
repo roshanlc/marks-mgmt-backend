@@ -3,12 +3,17 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { responseStatusCode, errorResponse } = require("../../helper/error")
+const {
+  responseStatusCode,
+  errorResponse,
+  badRequestError,
+} = require("../../helper/error")
 const {
   getAllTeachersCount,
   listAllTeachers,
   listTeachersBy,
   getATeacherDetails,
+  deleteTeacher,
 } = require("../../db/teachers/teachers")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
@@ -64,8 +69,13 @@ router.get("/", async function (req, res) {
 
 // get a teacher detail
 router.get("/:id", async function (req, res) {
-  const { id } = req.params
-  const teacher = await getATeacherDetails(Number(id) || 0, Number(id) || 0)
+  const id = Number(req.params.id) || 0
+  if (id <= 0) {
+    res.status(400).json(badRequestError("Please provide a valid teacher id"))
+    return
+  }
+
+  const teacher = await getATeacherDetails(id, id)
 
   if (teacher.err !== null) {
     res
@@ -121,6 +131,26 @@ router.post("/", async function (req, res) {
 
   res.status(201).json(newTeacher.result)
   return
+})
+
+// delete a teacher account
+router.delete("/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id <= 0) {
+    res.status(400).json(badRequestError("Please provide a valid teacher id"))
+    return
+  }
+
+  const teacher = await deleteTeacher(id)
+
+  if (teacher.err !== null) {
+    res
+      .status(responseStatusCode.get(teacher.err.error.title) || 400)
+      .json(teacher.err)
+    return
+  }
+
+  res.status(200).json(teacher.result)
 })
 
 module.exports = router

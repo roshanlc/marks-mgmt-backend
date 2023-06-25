@@ -147,10 +147,58 @@ async function getAllTeachersCount() {
     }
   }
 }
+/**
+ * Delete a teacher from db
+ * @param {*} teacherId
+ * @returns - deleted teacher details or corresponding error
+ */
+
+async function deleteTeacher(teacherId) {
+  try {
+    const userDetails = await db.teacher.findFirstOrThrow({
+      where: { id: teacherId },
+    })
+
+    // all other user related details should be deleted automatically
+    const teacher = await db.user.delete({
+      where: { id: userDetails.userId },
+      include: { Teacher: true },
+    })
+
+    // delte password entry from data
+    if (teacher.password) {
+      delete teacher.password
+    }
+
+    return toResult(teacher, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. ${err.message}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteTeacher(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
 
 module.exports = {
   listAllTeachers,
   listTeachersBy,
   getATeacherDetails,
   getAllTeachersCount,
+  deleteTeacher,
 }
