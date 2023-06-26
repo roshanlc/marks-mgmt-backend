@@ -18,12 +18,14 @@ const { toResult } = require("../../helper/result")
  * Used to initiate new semester
  * @param {Number} year
  * @param {String} season
+ * @param {Boolean} current - is the current batch?
+ *
  */
-async function addBatch(year, season) {
+async function addBatch(year, season, current = false) {
   try {
     // TODO: add a logic to prevent same year and season being added again
     const batchInfo = await db.batch.create({
-      data: { year: year, season: season },
+      data: { year: year, season: season, current: current },
     })
     return toResult(batchInfo, null)
   } catch (err) {

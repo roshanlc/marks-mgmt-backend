@@ -279,7 +279,7 @@ async function seedCourses() {
 async function createBatch() {
   try {
     const year = new Date().getFullYear()
-    await addBatch(year, "FALL")
+    await addBatch(year, "FALL", true)
   } catch (err) {
     logger.warn(`createBatch(): Something went wrong, ${err.message}`)
   }
