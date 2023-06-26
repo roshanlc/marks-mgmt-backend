@@ -191,7 +191,7 @@ CREATE TABLE "Admin" (
 CREATE TABLE "ProgramHead" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
-    "programId" INTEGER NOT NULL,
+    "programId" INTEGER,
 
     CONSTRAINT "ProgramHead_pkey" PRIMARY KEY ("id")
 );
@@ -200,7 +200,7 @@ CREATE TABLE "ProgramHead" (
 CREATE TABLE "ExamHead" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
-    "facultyId" INTEGER NOT NULL,
+    "facultyId" INTEGER,
 
     CONSTRAINT "ExamHead_pkey" PRIMARY KEY ("id")
 );
@@ -381,13 +381,13 @@ ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") RE
 ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ExamHead" ADD CONSTRAINT "ExamHead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ExamHead" ADD CONSTRAINT "ExamHead_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ExamHead" ADD CONSTRAINT "ExamHead_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;

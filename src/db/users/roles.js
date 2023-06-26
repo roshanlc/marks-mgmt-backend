@@ -11,6 +11,8 @@ const {
   NotFoundError,
 } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
+const { deleteTeacher } = require("../teachers/teachers")
+const { getTeacherId, getAdminId } = require("./user")
 
 /**
  * Fetches roles for the given user id
@@ -86,9 +88,65 @@ async function assignRoleToUser(userId, roleName = "", roleId = 0) {
       },
     })
 
+    // student cannot be allowed other role
+    const studentId = await db.student.findUnique({ where: { userId: userId } })
+    if (studentId !== null) {
+      return toResult(
+        null,
+        badRequestError("Student cannot be given any other roles.")
+      )
+    }
+
+    // also prevent others from being student
+    if (roleIdDetails.name.toLowerCase() === "student") {
+      return toResult(
+        null,
+        badRequestError("Student role cannot be assigned to other users.")
+      )
+    }
+
     const roleAssigned = await db.userRoles.create({
       data: { userId: userId, roleId: roleIdDetails.id },
+      include: {
+        role: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
     })
+
+    const role = roleAssigned.role.name.toLowerCase()
+    // Add account to corresponding table with minimum details
+    if (role === "teacher") {
+      // skip if already exists
+      const teacher = await db.teacher.findUnique({ where: { userId: userId } })
+      if (teacher === null) {
+        // Insert into teacher table
+        await db.teacher.create({ data: { userId: userId } })
+      }
+    } else if (role === "admin") {
+      const admin = await db.admin.findUnique({ where: { userId: userId } })
+      if (admin === null) {
+        // Insert into admin table
+        await db.admin.create({ data: { userId: userId } })
+      }
+    } else if (role === "examhead") {
+      const examHead = await db.examHead.findFirst({
+        where: { userId: userId },
+      })
+      if (examHead === null) {
+        // Insert into ExamHead table
+        await db.examHead.create({ data: { userId: userId } })
+      }
+    } else if (role === "programhead") {
+      const programHead = await db.programHead.findFirst({
+        where: { userId: userId },
+      })
+      if (programHead === null) {
+        // Insert into ProgramHead table
+        await db.programHead.create({
+          data: { user: { connect: { id: userId } } },
+        })
+      }
+    }
 
     return toResult({ role: roleAssigned }, null)
   } catch (err) {
@@ -110,6 +168,17 @@ async function assignRoleToUser(userId, roleName = "", roleId = 0) {
       return toResult(
         null,
         NotFoundError(`Provided details does not exist. ${err.message}`)
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
       )
     } else {
       logger.warn(`assignRoleToUser(): ${err.message}`) // Always log cases for internal server error
@@ -150,9 +219,55 @@ async function listAllRoles() {
 
 async function removeRoleFromUser(userId, roleId) {
   try {
+    // allow only if a user has multiple roles
+
+    const rolesCount = await db.userRoles.findMany({
+      where: { userId: userId },
+    })
+
+    if (rolesCount.length === 0) {
+      return toResult(
+        null,
+        NotFoundError("No UserRoles found for the provided details.")
+      )
+    } else if (rolesCount.length === 1) {
+      return toResult(
+        null,
+        badRequestError("User has only a single role. Not Allowed.")
+      )
+    }
+
     const roleDeletion = await db.userRoles.delete({
       where: { userId_roleId: { roleId: roleId, userId: userId } },
+      include: {
+        role: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
     })
+
+    const roleName = roleDeletion.role.name.toLowerCase()
+    // delete account from corresponding table
+    if (roleName === "teacher") {
+      // Delete from teacher table
+
+      await db.teacher.delete({ where: { userId: userId } })
+    } else if (roleName === "admin") {
+      // Delete from admin table
+
+      await db.admin.delete({ where: { userId: userId } })
+    } else if (roleName === "examhead") {
+      // delete from ExamHead table
+
+      await db.examHead.delete({ where: { userId: userId } })
+    } else if (roleName === "programhead") {
+      // delete from ProgramHead table
+
+      const programHeadId = await db.programHead.findFirstOrThrow({
+        where: { userId: userId },
+      })
+      await db.programHead.delete({ where: { id: programHeadId.id } })
+    }
+
     return toResult({ role: roleDeletion }, null)
   } catch (err) {
     if (
