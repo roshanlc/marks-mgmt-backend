@@ -127,7 +127,7 @@ async function updateProfile(
         null,
         errorResponse(
           "Not Found",
-          err.message || "Please provide valid details."
+          err?.meta?.cause || "Please provide valid details."
         )
       )
     } else if (
