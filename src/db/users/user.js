@@ -594,6 +594,66 @@ async function listAllUsers(roleId = 0) {
   }
 }
 
+/**
+ * Delete a user from db
+ * It will cause all other user related details to deleted as well
+ * @param {*} userID - id of the user
+ * @returns - deleted user account details or corresponding error
+ */
+async function deleteUser(userID) {
+  try {
+    // all other user related details should be deleted automatically
+    const user = await db.user.delete({
+      where: { id: userID },
+      include: {
+        UserRoles: { include: { role: true } },
+        Admin: true,
+        ExamHead: true,
+        Student: {
+          include: {
+            program: {
+              include: { department: { include: { faculty: true } } },
+            },
+            StudentStatus: true,
+            syllabus: true,
+            semester: true,
+          },
+        },
+        ProgramHead: true,
+        Teacher: true,
+      },
+    })
+
+    // delte password entry from data
+    if (user.password) {
+      delete user.password
+    }
+
+    return toResult(user, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. ${err.meta.cause}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteUser(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   checkLogin,
   getUserDetails,
@@ -606,4 +666,5 @@ module.exports = {
   addAdminWithUser,
   changePassword,
   listAllUsers,
+  deleteUser,
 }

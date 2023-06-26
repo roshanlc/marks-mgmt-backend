@@ -15,7 +15,11 @@ const {
 } = require("../../db/users/roles")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
-const { getUserDetails, listAllUsers } = require("../../db/users/user")
+const {
+  getUserDetails,
+  listAllUsers,
+  deleteUser,
+} = require("../../db/users/user")
 const { updateProfile, getProfileDetails } = require("../../db/users/profile")
 const router = Router()
 
@@ -222,6 +226,29 @@ router.get("/:id/profile", async function (req, res) {
 
   // return user profile details
   res.status(200).json(profile.result)
+  return
+})
+
+// delete a user
+router.delete("/:id", async function (req, res) {
+  const userId = Number(req.params.id) || 0
+
+  if (userId <= 0) {
+    res.status(400).json(badRequestError("Please provide a proper user id."))
+    return
+  }
+
+  const user = await deleteUser(userId)
+  // check for errors
+  if (user.err !== null) {
+    res
+      .status(responseStatusCode.get(user.err.error.title) || 400)
+      .json(user.err)
+    return
+  }
+
+  // return deleted user's  details
+  res.status(200).json(user.result)
   return
 })
 
