@@ -13,35 +13,33 @@ const { getAStudentDetails } = require("../students/students")
  */
 async function getProfileDetails(userId) {
   try {
-    const profile = await getUserDetails(userId)
+    const profile = await db.user.findFirstOrThrow({
+      where: { id: userId },
+      include: {
+        UserRoles: { include: { role: true } },
+        Admin: true,
+        ExamHead: true,
+        Student: {
+          include: {
+            program: {
+              include: { department: { include: { faculty: true } } },
+            },
+            StudentStatus: true,
+            syllabus: true,
+            semester: true,
+          },
+        },
+        ProgramHead: true,
+        Teacher: true,
+      },
+    })
 
-    // incase of error, return as it is
-    if (profile.err !== null || profile.result.UserRoles.length === 0) {
-      return profile
+    // delete password property
+    if (profile.password) {
+      delete profile.password
     }
 
-    // loop over user roles array
-    // extract "roles"
-    for (const roleObj of profile.result.UserRoles) {
-      if (roleObj.role.name === "student") {
-        const studentDetails = await getAStudentDetails(profile.result.id)
-        if (studentDetails.err !== null) {
-          return studentDetails
-        }
-        // Append to the user details object
-
-        profile.result.student = studentDetails.result.student
-      } else if (roleObj.role.name === "teacher") {
-        const teacherDetails = await getTeacherDetails(profile.result.id)
-
-        profile.result.teacher = teacherDetails
-      }
-    }
-
-    // TODO: add support for other profile types (dept head, program head,...)
-
-    // return profile details
-    return profile
+    return toResult(profile, null)
   } catch (err) {
     // check for "NotFoundError" explicitly
     if (
@@ -71,4 +69,99 @@ async function getTeacherDetails(userId = 0, teacherId = 0) {
   })
 }
 
-module.exports = { getProfileDetails, getTeacherDetails }
+/**
+ * Update profile of a user
+ * @param {*} userId
+ * @param {*} email
+ * @param {*} name
+ * @param {*} address
+ * @param {*} contactNo
+ * @returns - updated profile or corresponding error
+ */
+async function updateProfile(
+  userId,
+  email = "",
+  name = "",
+  address = "",
+  contactNo = ""
+) {
+  try {
+    const profile = await db.user.update({
+      where: { id: userId },
+      data: {
+        email: email === "" ? undefined : email,
+        name: name === "" ? undefined : name,
+        address: address === "" ? undefined : address,
+        contactNo: contactNo === "" ? undefined : contactNo,
+      },
+      include: {
+        UserRoles: { include: { role: true } },
+        Admin: true,
+        ExamHead: true,
+        Student: {
+          include: {
+            program: {
+              include: { department: { include: { faculty: true } } },
+            },
+            StudentStatus: true,
+            syllabus: true,
+            semester: true,
+          },
+        },
+        ProgramHead: true,
+        Teacher: true,
+      },
+    })
+
+    // delete password property
+    if (profile.password) {
+      delete profile.password
+    }
+    return toResult(profile, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          err.message || "Please provide valid details."
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. The email is already taken.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`updateProfile(): ${err}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+module.exports = { getProfileDetails, getTeacherDetails, updateProfile }
