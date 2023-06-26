@@ -88,17 +88,35 @@ async function assignRoleToUser(userId, roleName = "", roleId = 0) {
       },
     })
 
+    // name of the role to be assigned
+    const role = roleIdDetails.name.toLowerCase()
+
+    const rolesCount = await db.userRoles.findMany({
+      where: { userId: userId },
+    })
+
     // student cannot be allowed other role
     const studentId = await db.student.findUnique({ where: { userId: userId } })
-    if (studentId !== null) {
+    if (studentId !== null && role !== "student") {
       return toResult(
         null,
         badRequestError("Student cannot be given any other roles.")
       )
     }
 
-    // also prevent others from being student
-    if (roleIdDetails.name.toLowerCase() === "student") {
+    // if student is present in student table but has not been assigned student role
+    if (role === "student" && studentId !== null) {
+      if (rolesCount.length > 0) {
+        return toResult(
+          null,
+          errorResponse(
+            "Conflict",
+            "Student has already been assigned student role."
+          )
+        )
+      }
+    } else if (role === "student" && studentId === null) {
+      // also prevent others from being student
       return toResult(
         null,
         badRequestError("Student role cannot be assigned to other users.")
@@ -113,7 +131,6 @@ async function assignRoleToUser(userId, roleName = "", roleId = 0) {
       },
     })
 
-    const role = roleAssigned.role.name.toLowerCase()
     // Add account to corresponding table with minimum details
     if (role === "teacher") {
       // skip if already exists
