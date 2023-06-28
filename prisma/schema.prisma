@@ -199,6 +199,8 @@ model Batch {
   RunningSemesters RunningSemesters[]
   TeacherCourses   TeacherCourses[]
   StudentMarks     StudentMarks[]
+
+  @@unique([year, season])
 }
 
 // Season of the year
