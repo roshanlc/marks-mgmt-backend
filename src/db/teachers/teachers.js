@@ -91,10 +91,29 @@ async function getATeacherDetails(userId = 0, teacherId = 0) {
       include: {
         user: { select: { id: true, name: true, email: true } },
         TeacherCourses: {
-          include: { course: true, program: true, batch: true },
+          include: {
+            course: { include: { markWeightage: true } },
+            program: true,
+            batch: true,
+          },
         },
       },
     })
+
+    const updatedCourses = []
+    // add syllabus and semester info in the response
+    for (const course of teacher.TeacherCourses) {
+      const syllabus = await db.programCourses.findFirstOrThrow({
+        where: { courseId: course.courseId, programId: course.programId },
+        include: { syllabus: true, semester: true },
+      })
+      course.semester = syllabus.semester
+      course.syllabus = syllabus.syllabus
+      updatedCourses.push(course)
+    }
+
+    // update courses
+    teacher.TeacherCourses = updatedCourses
 
     return toResult({ teacher: teacher }, null)
   } catch (err) {
