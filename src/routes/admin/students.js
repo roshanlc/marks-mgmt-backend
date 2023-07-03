@@ -209,15 +209,15 @@ router.put("/:id", async function (req, res) {
   }
 
   // requires custom validation since fields are optional
-  let { semester, puRegdNo, symbolNo, status } = req.body
+  let { semester, puRegNo, symbolNo, status } = req.body
   if (semester === undefined) {
     semester = 0
   } else if (Number(semester) <= 0) {
     res.status(400).json(badRequestError("Please provide a valid semester."))
     return
   }
-  if (puRegdNo === undefined) {
-    puRegdNo = ""
+  if (puRegNo === undefined) {
+    puRegNo = ""
   }
 
   if (status === undefined) {
@@ -233,7 +233,7 @@ router.put("/:id", async function (req, res) {
   const student = await studentsDb.updateStudentDetails(
     id,
     symbolNo,
-    puRegdNo,
+    puRegNo,
     Number(semester),
     status
   )

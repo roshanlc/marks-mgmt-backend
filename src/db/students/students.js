@@ -314,8 +314,8 @@ async function deleteStudent(studentId) {
  */
 async function updateStudentDetails(
   studentId,
-  symbolNo = 0,
-  puRegdNo = 0,
+  symbolNo = "",
+  puRegNo = "",
   semesterId = 0, // upgrade or downgrade semesters
   status = ""
 ) {
@@ -336,8 +336,8 @@ async function updateStudentDetails(
     const newDetails = await db.student.update({
       where: { id: studentId },
       data: {
-        puRegNo: puRegdNo > 0 ? puRegdNo : undefined,
-        symbolNo: symbolNo > 0 ? symbolNo : undefined,
+        symbolNo: symbolNo === "" ? undefined : symbolNo,
+        puRegNo: puRegNo === "" ? undefined : puRegNo,
         semesterId: semesterId > 0 ? semesterId : undefined,
         StudentStatus: {
           update: {
