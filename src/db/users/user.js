@@ -564,12 +564,16 @@ async function listAllUsers(roleId = 0) {
       where: {
         UserRoles: { some: { roleId: roleId > 0 ? roleId : undefined } },
       },
-      include: {
-        UserRoles: {
-          select: {
-            role: true,
-          },
-        },
+      select: {
+        id: true,
+        email: true,
+        password: false,
+        name: true,
+        address: true,
+        contactNo: true,
+        activated: true,
+        expired: true,
+        UserRoles: { include: { role: true } },
       },
     })
 

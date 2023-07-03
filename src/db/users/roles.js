@@ -11,8 +11,6 @@ const {
   NotFoundError,
 } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
-const { deleteTeacher } = require("../teachers/teachers")
-const { getTeacherId, getAdminId } = require("./user")
 
 /**
  * Fetches roles for the given user id
