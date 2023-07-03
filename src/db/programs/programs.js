@@ -5,7 +5,12 @@
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
 const logger = require("../../helper/logger")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  NotFoundError,
+  badRequestError,
+} = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 
 /**
@@ -178,10 +183,169 @@ async function addLevel(levelName) {
   }
 }
 
+/**
+ * Delete a faculty
+ * @param {Number} facultyId - id of the faculty
+ * @returns deleted faculty or corresponding error
+ */
+async function deleteFaculty(facultyId) {
+  try {
+    const faculty = await db.faculty.delete({
+      where: { id: facultyId },
+    })
+
+    return toResult({ faculty: faculty }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        NotFoundError(
+          `Not found. Please provide proper details. ${err?.meta?.cause}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(
+          `Not found. Please provide proper details. ${
+            err?.meta?.cause || err?.message || ""
+          }`
+        )
+      )
+    } else {
+      logger.warn(`deleteFaculty(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delete a department
+ * @param {Number} departmentId - id of the department
+ * @returns deleted department or corresponding error
+ */
+async function deleteDepartment(deptId) {
+  try {
+    const dept = await db.department.delete({
+      where: { id: deptId },
+    })
+
+    return toResult({ department: dept }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        NotFoundError(
+          `Not found. Please provide proper details. ${err?.meta?.cause}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(
+          `Not found. Please provide proper details. ${
+            err?.meta?.cause || err?.message || ""
+          }`
+        )
+      )
+    } else {
+      logger.warn(`deleteDepartment(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delete a Program
+ * @param {Number} programId - id of the program
+ * @returns deleted program or corresponding error
+ */
+async function deleteProgram(programId) {
+  try {
+    const prog = await db.program.delete({ where: { id: programId } })
+
+    return toResult({ program: prog }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        NotFoundError(
+          `Not found. Please provide proper details. ${err?.meta?.cause}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      console.log(err)
+      return toResult(
+        null,
+        badRequestError(
+          `Not found. Please provide proper details. ${
+            err?.meta?.cause || err?.message || ""
+          }`
+        )
+      )
+    } else {
+      logger.warn(`deleteProgram(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delete a Program Syllabus
+ * @param {Number} syllabusId - id of the syllabus
+ * @returns deleted syllabus or corresponding error
+ */
+async function deleteSyllabus(syllabusId) {
+  try {
+    const syllabus = await db.syllabus.delete({
+      where: { id: syllabusId },
+    })
+
+    return toResult({ syllabus: syllabus }, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        NotFoundError(
+          `Not found. Please provide proper details. ${err?.meta?.cause}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(
+          `Not found. Please provide proper details. ${
+            err?.meta?.cause || err?.message || ""
+          }`
+        )
+      )
+    } else {
+      logger.warn(`deleteSyllabus(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   addFaculty,
   addDepartment,
   addProgram,
   addSyllabus,
   addLevel,
+  deleteDepartment,
+  deleteFaculty,
+  deleteProgram,
+  deleteSyllabus,
 }

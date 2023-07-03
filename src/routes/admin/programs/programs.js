@@ -12,6 +12,9 @@ const {
   addProgram,
   addSyllabus,
   addLevel,
+  deleteProgram,
+  deleteDepartment,
+  deleteFaculty,
 } = require("../../../db/programs/programs")
 const { escapeColon } = require("../../../helper/utils")
 const {
@@ -51,6 +54,28 @@ router.post("/faculty", async function (req, res) {
   return
 })
 
+// delete a faculty
+router.delete("/faculty/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id <= 0) {
+    res
+      .status(400)
+      .json(errorResponse("Bad Request", "Provide a valid faculty id"))
+    return
+  }
+
+  const faculty = await deleteFaculty(id)
+
+  if (faculty.err !== null) {
+    res
+      .status(responseStatusCode.get(faculty.err.error.title))
+      .json(faculty.err)
+    return
+  }
+
+  res.status(200).json(faculty.result)
+  return
+})
 // schema for department
 const deptSchema = Joi.object({
   name: Joi.string().required().trim().min(3),
@@ -80,6 +105,27 @@ router.post("/department", async function (req, res) {
   return
 })
 
+// delete a department
+router.delete("/department/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id <= 0) {
+    res
+      .status(400)
+      .json(errorResponse("Bad Request", "Provide a valid department id"))
+    return
+  }
+
+  const dept = await deleteDepartment(id)
+
+  if (dept.err !== null) {
+    res.status(responseStatusCode.get(dept.err.error.title)).json(dept.err)
+    return
+  }
+
+  res.status(200).json(dept.result)
+  return
+})
+
 // schema for program
 const programSchema = Joi.object({
   name: Joi.string().required().trim().min(3),
@@ -88,7 +134,7 @@ const programSchema = Joi.object({
   levelId: Joi.number().required().min(1),
 })
 
-// create a new department
+// create a new program
 router.post("/program", async function (req, res) {
   const err = programSchema.validate(req.body).error
 
@@ -109,6 +155,29 @@ router.post("/program", async function (req, res) {
   }
 
   res.status(201).json(program.result)
+  return
+})
+
+// delete a program
+router.delete("/program/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id <= 0) {
+    res
+      .status(400)
+      .json(errorResponse("Bad Request", "Provide a valid program id"))
+    return
+  }
+
+  const program = await deleteProgram(id)
+
+  if (program.err !== null) {
+    res
+      .status(responseStatusCode.get(program.err.error.title))
+      .json(program.err)
+    return
+  }
+
+  res.status(200).json(program.result)
   return
 })
 
