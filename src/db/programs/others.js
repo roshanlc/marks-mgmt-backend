@@ -163,7 +163,11 @@ async function getLatestBatch() {
  */
 async function getFaculties() {
   try {
-    const faculties = await db.faculty.findMany()
+    const faculties = await db.faculty.findMany({
+      include: {
+        Department: { include: { Program: { include: { level: true } } } },
+      },
+    })
     return toResult(faculties, null)
   } catch (err) {
     // check for "NotFoundError" explicitly
@@ -186,6 +190,9 @@ async function getFacultyById(facultyId = 0, facultyName = "") {
   try {
     const faculty = await db.faculty.findFirstOrThrow({
       where: { OR: [{ id: facultyId }, { name: facultyName }] },
+      include: {
+        Department: { include: { Program: { include: { level: true } } } },
+      },
     })
     return toResult(faculty, null)
   } catch (err) {
