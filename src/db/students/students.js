@@ -19,7 +19,17 @@ async function listAllStudents() {
     const students = await db.student.findMany({
       include: {
         program: { include: { department: true, level: true } },
-        user: { select: { id: true, name: true, email: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            contactNo: true,
+            address: true,
+            activated: true,
+            expired: true,
+          },
+        },
         syllabus: true,
         semester: true,
         StudentStatus: true,
@@ -66,7 +76,17 @@ async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
       },
       include: {
         program: { include: { department: true, level: true } },
-        user: { select: { id: true, name: true, email: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            contactNo: true,
+            address: true,
+            activated: true,
+            expired: true,
+          },
+        },
         syllabus: true,
         semester: true,
         StudentStatus: true,
