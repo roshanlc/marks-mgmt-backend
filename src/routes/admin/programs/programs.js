@@ -15,6 +15,7 @@ const {
   deleteProgram,
   deleteDepartment,
   deleteFaculty,
+  deleteSyllabus,
 } = require("../../../db/programs/programs")
 const { escapeColon } = require("../../../helper/utils")
 const {
@@ -211,6 +212,28 @@ router.post("/syllabus", async function (req, res) {
   return
 })
 
+// delete a syllabus
+router.delete("/syllabus/:id", async function (req, res) {
+  const id = Number(req.params.id) || 0
+  if (id <= 0) {
+    res
+      .status(400)
+      .json(errorResponse("Bad Request", "Provide a valid syllabus id"))
+    return
+  }
+
+  const syllabus = await deleteSyllabus(id)
+
+  if (syllabus.err !== null) {
+    res
+      .status(responseStatusCode.get(syllabus.err.error.title))
+      .json(syllabus.err)
+    return
+  }
+
+  res.status(200).json(syllabus.result)
+  return
+})
 // schema for level
 const levelSchema = Joi.object({
   name: Joi.string().required().trim().min(3),
