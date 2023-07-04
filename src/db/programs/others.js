@@ -449,6 +449,29 @@ async function getSyllabusOfProgram(programId) {
     }
   }
 }
+
+/**
+ * Get all Levels
+ * @returns All the levels
+ */
+async function listAllLevels() {
+  try {
+    const levels = await db.level.findMany({ include: { Program: true } })
+    return toResult(levels, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`listAllLevels(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   addBatch,
   getLatestBatch,
@@ -464,4 +487,5 @@ module.exports = {
   listAllBatch,
   getBatchById,
   deleteBatchById,
+  listAllLevels,
 }

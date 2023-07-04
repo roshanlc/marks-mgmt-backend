@@ -16,6 +16,7 @@ const {
   getSyllabusOfProgram,
   getBatchById,
   listAllBatch,
+  listAllLevels,
 } = require("../../db/programs/others")
 const { listAllCourses, getCourse } = require("../../db/programs/courses")
 
@@ -252,6 +253,19 @@ router.get("/batch/:id", async function (req, res) {
   }
 
   res.status(200).json(batch.result)
+  return
+})
+
+// list all levels
+router.get("/levels", async function (req, res) {
+  const levels = await listAllLevels()
+
+  if (levels.err !== null) {
+    res.status(responseStatusCode.get(levels.err.error.title)).json(levels.err)
+    return
+  }
+
+  res.status(200).json(levels.result)
   return
 })
 module.exports = router
