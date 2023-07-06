@@ -17,6 +17,7 @@ const {
   getBatchById,
   listAllBatch,
   listAllLevels,
+  getCurrentBatch,
 } = require("../../db/programs/others")
 const { listAllCourses, getCourse } = require("../../db/programs/courses")
 
@@ -229,6 +230,19 @@ router.get("/courses/:id", async function (req, res) {
 // list all batch
 router.get("/batch", async function (req, res) {
   const batch = await listAllBatch()
+
+  if (batch.err !== null) {
+    res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
+    return
+  }
+
+  res.status(200).json(batch.result)
+  return
+})
+
+// current batch
+router.get("/batch/current", async function (req, res) {
+  const batch = await getCurrentBatch()
 
   if (batch.err !== null) {
     res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)

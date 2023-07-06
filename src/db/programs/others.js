@@ -99,6 +99,38 @@ async function getBatchById(batchId) {
 }
 
 /**
+ * Current batch of the system
+ * @returns current batch or corresponding error
+ */
+async function getCurrentBatch() {
+  try {
+    const batch = await db.batch.findFirstOrThrow({
+      where: { current: true },
+    })
+    return toResult(batch, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "No such entry found in the batch table.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`getCurrentBatch(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
  * Delete a batch by id
  * @param {Number} batchId - id of the batch
  * @returns deleted batch or corresponding error
@@ -489,4 +521,5 @@ module.exports = {
   getBatchById,
   deleteBatchById,
   listAllLevels,
+  getCurrentBatch,
 }
