@@ -17,6 +17,7 @@ const {
   removeCourseFromSyllabus,
   assignCourseToTeacher,
   removeCourseFromTeacher,
+  addMultipleCourseToSyllabus,
 } = require("../../../db/programs/courses")
 
 // schema for faculty
@@ -299,6 +300,44 @@ router.delete("/:id/teacher", async function (req, res) {
   }
 
   res.status(200).json(assign.result)
+  return
+})
+
+// schema for multiple courses addition to a programsyllabus
+const multipleCoursesSchema = Joi.object({
+  programId: Joi.number().required().positive(),
+  syllabusId: Joi.number().required().positive(),
+  semesterId: Joi.number().required().positive(),
+  courses: Joi.array().items(Joi.number().positive()).required(),
+})
+
+// endpoint to assign multiple courses at once for a semester for a program syllabus
+router.post("/assign", async function (req, res) {
+  const err = multipleCoursesSchema.validate(req.body).error
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  const { semesterId, programId, syllabusId, courses: coursesArr } = req.body
+
+  // try to add courses to syllabus
+  const courses = await addMultipleCourseToSyllabus(
+    coursesArr,
+    programId,
+    syllabusId,
+    semesterId
+  )
+
+  if (courses.err !== null) {
+    res
+      .status(responseStatusCode.get(courses.err.error.title))
+      .json(courses.err)
+    return
+  }
+
+  res.status(201).send(courses.result)
   return
 })
 

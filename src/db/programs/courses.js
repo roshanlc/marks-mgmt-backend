@@ -264,7 +264,67 @@ async function addCourseToSyllabus(
         )
       )
     } else {
-      logger.warn(`addCourse(): ${err.message}`) // Always log cases for internal server error
+      logger.warn(`addCourseToSyllabus(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Add multiple course to a program syllabus for a semester
+ * @param {*} courses
+ * @param {*} programId
+ * @param {*} syllabusId
+ * @param {*} semesterId
+ * @returns course details or corresponding error
+ */
+async function addMultipleCourseToSyllabus(
+  courses = [],
+  programId,
+  syllabusId,
+  semesterId
+) {
+  try {
+    // data entity
+    const data = courses.map((course) => ({
+      courseId: course,
+      programId: programId,
+      syllabusId: syllabusId,
+      semesterId: semesterId,
+    }))
+
+    const assignCourse = await db.programCourses.createMany({
+      data: data,
+      skipDuplicates: true,
+    })
+
+    return toResult(assignCourse, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2003"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. Failed on foreign constraint fields.`
+        )
+      )
+    } else {
+      console.log(err) //log purpose
+      logger.warn(`addMultipleCourseToSyllabus(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())
     }
   }
@@ -567,4 +627,5 @@ module.exports = {
   removeCourseFromTeacher,
   listAllCourses,
   getCourse,
+  addMultipleCourseToSyllabus,
 }
