@@ -24,6 +24,7 @@ const {
   getBatchById,
   deleteBatchById,
 } = require("../../../db/programs/others")
+const { upgradeBatch } = require("../../../db/programs/batch-upgrade")
 
 // schema for faculty
 const facultySchema = Joi.object({
@@ -302,6 +303,36 @@ router.delete("/batch/:id", async function (req, res) {
   }
 
   res.status(200).json(batch.result)
+  return
+})
+
+// schema for batch upgrade
+const upgradeBatchSchema = Joi.object({
+  targetBatchId: Joi.number().required("targetBatchId is required").positive(),
+})
+
+router.post("/batch/upgrade", async function (req, res) {
+  const err = upgradeBatchSchema.validate(req.body).error
+
+  // incase of errors during body validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  const targetBatchId = req.body.targetBatchId
+
+  const upgradeBatchDetails = await upgradeBatch(targetBatchId)
+
+  // in case of error
+  if (upgradeBatchDetails.err !== null) {
+    res
+      .status(responseStatusCode.get(upgradeBatchDetails.err.error.title))
+      .json(upgradeBatchDetails.err)
+    return
+  }
+
+  res.status(201).json(upgradeBatchDetails.result)
   return
 })
 

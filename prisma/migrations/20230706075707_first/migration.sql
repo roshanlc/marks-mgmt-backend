@@ -279,6 +279,9 @@ CREATE UNIQUE INDEX "ElectiveCourse_name_key" ON "ElectiveCourse"("name");
 CREATE UNIQUE INDEX "ProgramCourses_programId_semesterId_syllabusId_courseId_key" ON "ProgramCourses"("programId", "semesterId", "syllabusId", "courseId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Batch_year_season_key" ON "Batch"("year", "season");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Student_symbolNo_key" ON "Student"("symbolNo");
 
 -- CreateIndex
