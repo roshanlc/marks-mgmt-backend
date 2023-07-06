@@ -153,6 +153,7 @@ CREATE TABLE "Batch" (
     "id" SERIAL NOT NULL,
     "year" INTEGER NOT NULL,
     "season" "Season" NOT NULL,
+    "current" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Batch_pkey" PRIMARY KEY ("id")
 );
@@ -187,6 +188,24 @@ CREATE TABLE "Admin" (
 );
 
 -- CreateTable
+CREATE TABLE "ProgramHead" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "programId" INTEGER,
+
+    CONSTRAINT "ProgramHead_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ExamHead" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "facultyId" INTEGER,
+
+    CONSTRAINT "ExamHead_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "StudentMarks" (
     "theory" INTEGER,
     "practical" INTEGER,
@@ -194,7 +213,7 @@ CREATE TABLE "StudentMarks" (
     "studentId" INTEGER NOT NULL,
     "courseId" INTEGER NOT NULL,
     "teacherId" INTEGER,
-    "batchId" INTEGER NOT NULL,
+    "batchId" INTEGER,
 
     CONSTRAINT "StudentMarks_pkey" PRIMARY KEY ("studentId","courseId")
 );
@@ -224,6 +243,9 @@ CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "UserRoles_userId_roleId_key" ON "UserRoles"("userId", "roleId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Faculty_name_key" ON "Faculty"("name");
 
 -- CreateIndex
@@ -239,6 +261,12 @@ CREATE UNIQUE INDEX "Program_name_key" ON "Program"("name");
 CREATE UNIQUE INDEX "ProgramSemesters_programId_key" ON "ProgramSemesters"("programId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ProgramSemesters_programId_semesterId_key" ON "ProgramSemesters"("programId", "semesterId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RunningSemesters_programId_semesterId_batchId_key" ON "RunningSemesters"("programId", "semesterId", "batchId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Course_code_key" ON "Course"("code");
 
 -- CreateIndex
@@ -248,37 +276,67 @@ CREATE UNIQUE INDEX "ElectiveCourse_code_key" ON "ElectiveCourse"("code");
 CREATE UNIQUE INDEX "ElectiveCourse_name_key" ON "ElectiveCourse"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ProgramCourses_programId_semesterId_syllabusId_courseId_key" ON "ProgramCourses"("programId", "semesterId", "syllabusId", "courseId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Batch_year_season_key" ON "Batch"("year", "season");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Student_symbolNo_key" ON "Student"("symbolNo");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Student_puRegNo_key" ON "Student"("puRegNo");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Student_userId_key" ON "Student"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Teacher_userId_key" ON "Teacher"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_userId_key" ON "Admin"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProgramHead_programId_key" ON "ProgramHead"("programId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ExamHead_userId_key" ON "ExamHead"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StudentMarks_studentId_courseId_key" ON "StudentMarks"("studentId", "courseId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TeacherCourses_teacherId_courseId_programId_batchId_key" ON "TeacherCourses"("teacherId", "courseId", "programId", "batchId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "StudentStatus_studentId_status_key" ON "StudentStatus"("studentId", "status");
+
 -- AddForeignKey
-ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserRoles" ADD CONSTRAINT "UserRoles_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Department" ADD CONSTRAINT "Department_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Department" ADD CONSTRAINT "Department_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Program" ADD CONSTRAINT "Program_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Program" ADD CONSTRAINT "Program_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Program" ADD CONSTRAINT "Program_levelId_fkey" FOREIGN KEY ("levelId") REFERENCES "Level"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Syllabus" ADD CONSTRAINT "Syllabus_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Syllabus" ADD CONSTRAINT "Syllabus_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProgramSemesters" ADD CONSTRAINT "ProgramSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ProgramSemesters" ADD CONSTRAINT "ProgramSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProgramSemesters" ADD CONSTRAINT "ProgramSemesters_semesterId_fkey" FOREIGN KEY ("semesterId") REFERENCES "Semester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RunningSemesters" ADD CONSTRAINT "RunningSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RunningSemesters" ADD CONSTRAINT "RunningSemesters_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RunningSemesters" ADD CONSTRAINT "RunningSemesters_semesterId_fkey" FOREIGN KEY ("semesterId") REFERENCES "Semester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -293,7 +351,7 @@ ALTER TABLE "Course" ADD CONSTRAINT "Course_markWeightageId_fkey" FOREIGN KEY ("
 ALTER TABLE "ElectiveCourse" ADD CONSTRAINT "ElectiveCourse_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProgramCourses" ADD CONSTRAINT "ProgramCourses_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ProgramCourses" ADD CONSTRAINT "ProgramCourses_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProgramCourses" ADD CONSTRAINT "ProgramCourses_semesterId_fkey" FOREIGN KEY ("semesterId") REFERENCES "Semester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -308,22 +366,34 @@ ALTER TABLE "ProgramCourses" ADD CONSTRAINT "ProgramCourses_syllabusId_fkey" FOR
 ALTER TABLE "Student" ADD CONSTRAINT "Student_semesterId_fkey" FOREIGN KEY ("semesterId") REFERENCES "Semester"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Student" ADD CONSTRAINT "Student_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Student" ADD CONSTRAINT "Student_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Student" ADD CONSTRAINT "Student_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Student" ADD CONSTRAINT "Student_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Student" ADD CONSTRAINT "Student_syllabusId_fkey" FOREIGN KEY ("syllabusId") REFERENCES "Syllabus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Student" ADD CONSTRAINT "Student_syllabusId_fkey" FOREIGN KEY ("syllabusId") REFERENCES "Syllabus"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Teacher" ADD CONSTRAINT "Teacher_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Teacher" ADD CONSTRAINT "Teacher_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ExamHead" ADD CONSTRAINT "ExamHead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ExamHead" ADD CONSTRAINT "ExamHead_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -332,10 +402,10 @@ ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_courseId_fkey" FOREIGN K
 ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StudentMarks" ADD CONSTRAINT "StudentMarks_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "Teacher"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -347,4 +417,4 @@ ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_batchId_fkey" FOREIG
 ALTER TABLE "TeacherCourses" ADD CONSTRAINT "TeacherCourses_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentStatus" ADD CONSTRAINT "StudentStatus_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "StudentStatus" ADD CONSTRAINT "StudentStatus_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE CASCADE ON UPDATE CASCADE;

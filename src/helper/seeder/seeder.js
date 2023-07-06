@@ -12,7 +12,20 @@ const {
   programSemesters,
   programSyllabus,
 } = require("./programs")
-const { courses, markWeightage } = require("./courses")
+const { markWeightage, old_comp_courses } = require("./courses")
+const { admins, students, teachers } = require("./users.js")
+const {
+  addStudentWithUser,
+  addTeacherWithUser,
+  addAdminWithUser,
+} = require("../../db/users/user")
+const {
+  getProgramById,
+  getSyllabusById,
+  addBatch,
+} = require("../../db/programs/others")
+const { assignRoleToUser } = require("../../db/users/roles")
+
 // prisma client
 const db = new PrismaClient()
 
@@ -23,7 +36,7 @@ async function seedRoles() {
       data: roles,
     })
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedRoles(): Something went wrong: ${err.message}`)
   }
 }
 
@@ -55,111 +68,95 @@ async function seedDepartments() {
       })
     }
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedDepartments(): Something went wrong: ${err.message}`)
   }
 }
 
 // seedDb seeds the database basic user details
 async function seedUsers() {
   const hash = hashPassword("Thisistheway")
+  for (const student of students) {
+    try {
+      const programId = await getProgramById(0, student.program)
+      if (programId.err !== null) {
+        throw programId.err
+      }
 
-  const userData = [
-    {
-      email: "teacher1@pu.edu.np",
-      password: hash,
-      name: "Teacher Sharma",
-      address: "Kathmandu",
-      contactNo: "",
-      activated: true,
-      expired: false,
-      roles: ["teacher"],
-    },
-    {
-      email: "student1@pu.edu.np",
-      password: hash,
-      name: "Student Sharma",
-      address: "Kathmandu",
-      contactNo: "",
-      activated: true,
-      expired: false,
-      roles: ["student"],
-      // student: {
-      //   symbolNo: "19070130",
-      //   PuRegNo: "2018-01-69-6599",
-      //   program: "Computer Engineering",
-      //   level: "Bachelor",
-      //   semester: 8,
-      // },
-    },
-    {
-      email: "admin1@pu.edu.np",
-      password: hash,
-      name: "Admin Sharma",
-      address: "Kathmandu",
-      contactNo: "",
-      activated: true,
-      expired: false,
-      roles: ["admin", "teacher"],
-    },
-  ]
+      const syllabusId = await getSyllabusById(0, student.syllabus)
 
-  try {
-    await db.user.createMany({
-      data: userData.map((user) => {
-        return {
-          email: user.email,
-          password: user.password,
-          name: user.name,
-          address: user.address,
-          contactNo: user.contactNo,
-          activated: user.activated,
-          expired: user.expired,
+      await addStudentWithUser(
+        student.email,
+        hash,
+        student.name,
+        student.address,
+        student.contactNo,
+        student.activated,
+        student.expired,
+        student.symbolNo,
+        student.puRegNo,
+        student.semester,
+        programId.result.id,
+        syllabusId.result.id,
+        student.status
+      )
+    } catch (err) {
+      logger.warn(`Something went wrong: ${err}`)
+      console.log(err)
+    }
+  }
+
+  for (const teacher of teachers) {
+    try {
+      const teacherDetails = await addTeacherWithUser(
+        teacher.email,
+        hash,
+        teacher.name,
+        teacher.address,
+        teacher.contactNo,
+        teacher.activated,
+        teacher.expired
+      )
+      if (teacherDetails.err !== null) {
+        throw teacherDetails.err
+      }
+      // Assign more roles if other teacher is provided
+      if (teacher.roles.length > 1) {
+        for (const role of teachers.roles) {
+          if (role === "teacher") continue
+          await assignRoleToUser(teacherDetails.result.id, role)
         }
-      }),
-    })
+      }
+    } catch (err) {
+      logger.warn(`Something went wrong: ${err}`)
+      console.log(err)
+    }
+  }
 
-    userData.forEach(async (user) => {
-      user.roles.forEach(async (role) => {
-        db.userRoles
-          .create({
-            data: {
-              user: { connect: { email: user.email } },
-              role: { connect: { name: role } },
-            },
-          })
-          .catch((err) => logger.warn(`Something went wrong: ${err}`))
-
-        //   if (role === "student") {
-        //     await db.student.create({
-        //       data: {
-        //         PuRegNo: user.student.PuRegNo,
-        //         symbolNo: user.student.symbolNo,
-        //         semester: user.student.semester,
-        //         program: {
-        //           connect: {
-        //             name: user.student.program,
-        //             level: user.student.level,
-        //           },
-        //         },
-        //       },
-        //     })
-        //   }
-
-        //   if (role === "teacher") {
-        //     await db.teacher.create({
-        //       data: { user: { connect: { email: user.email } } },
-        //     })
-        //   }
-
-        //   if (role === "admin") {
-        //     await db.admin.create({
-        //       data: { user: { connect: { email: user.email } } },
-        //     })
-        //   }
-      })
-    })
-  } catch (err) {
-    logger.warn(`Something went wrong: ${err}`)
+  for (const admin of admins) {
+    try {
+      const adminDetails = await addAdminWithUser(
+        admin.email,
+        hash,
+        admin.name,
+        admin.address,
+        admin.contactNo,
+        admin.activated,
+        admin.expired
+      )
+      if (adminDetails.err !== null) {
+        throw adminDetails.err
+      }
+      // Assign more roles if other teacher is provided
+      if (admin.roles.length > 1) {
+        for (const role of admin.roles) {
+          if (role === "admin") continue
+          await assignRoleToUser(adminDetails.result.id, role)
+        }
+      }
+    } catch (err) {
+      logger.warn(`seedUsers(): Something went wrong: ${err}`)
+      console.log(err)
+    }
   }
 }
 
@@ -201,7 +198,7 @@ async function seedPrograms() {
       })
     }
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedPrograms(): Something went wrong: ${err.message}`)
   }
 }
 
@@ -215,41 +212,79 @@ async function seedCourses() {
         data: { practical: markWt.practical, theory: markWt.theory },
       })
     }
+
+    const compProgramId = await db.program.findFirst({
+      where: { name: "Computer Engineering", level: { name: "Bachelor" } },
+    })
+
+    const oldSyllabusId = await db.syllabus.findFirst({
+      where: { name: "Computer Old Syllabus" },
+    })
+
     const markWeightList = new WeakMap()
 
-    for (const course of courses) {
-      const markWtId =
-        markWeightList.get(course.markWeightage) ||
-        (await db.markWeightage.findFirstOrThrow({
-          where: {
-            AND: [
-              {
-                theory: course.markWeightage.theory,
-                practical: course.markWeightage.practical,
+    for (const semester of old_comp_courses) {
+      for (const course of semester.courses) {
+        try {
+          const markWeightage = { theory: 30, practical: 20 }
+
+          const markWtId =
+            markWeightList.get(markWeightage) ||
+            (await db.markWeightage.findFirstOrThrow({
+              where: {
+                AND: [
+                  {
+                    theory: markWeightage.theory,
+                    practical: markWeightage.practical,
+                  },
+                ],
               },
-            ],
-          },
-        }))
+            }))
 
-      // set the data to map, so reduce fetching from db
-      markWeightList.set(course.markWeightage, markWtId)
+          // set the data to map, so reduce fetching from db
+          markWeightList.set(markWeightage, markWtId)
 
-      // add courses
-      await db.course.create({
-        data: {
-          credit: course.credit,
-          name: course.name,
-          code: course.code,
-          elective: course.elective,
-          project: course.project,
-          markWeightageId: markWtId.id,
-        },
-      })
+          // add courses
+          const courseDetails = await db.course.create({
+            data: {
+              credit: course.credits,
+              name: course.course_title,
+              code: course.code || undefined,
+              elective: course.elective || false,
+              project: course.project || false,
+              markWeightage: { connect: { id: markWtId.id } },
+            },
+          })
+
+          await db.programCourses.create({
+            data: {
+              courseId: courseDetails.id,
+              programId: compProgramId.id,
+              semesterId: semester.semester,
+              syllabusId: oldSyllabusId.id,
+            },
+          })
+        } catch (err) {
+          console.log(err)
+          logger.warn(`Something went wrong: ${err.message}`)
+        }
+      }
     }
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedCourses(): Something went wrong: ${err.message}`)
   }
 }
+
+// Create batch
+async function createBatch() {
+  try {
+    const year = new Date().getFullYear()
+    await addBatch(year, "FALL", true)
+  } catch (err) {
+    logger.warn(`createBatch(): Something went wrong, ${err.message}`)
+  }
+}
+
 /**
  * seeds the database with data
  */
@@ -259,11 +294,14 @@ async function seedDatabase() {
     // seed the roles table at first
     await seedRoles()
 
+    await createBatch()
+
     await seedDepartments()
 
     await seedPrograms()
 
     await seedCourses()
+
     // then seed users table
     await seedUsers()
 
@@ -271,7 +309,7 @@ async function seedDatabase() {
     // TODO: Add student, teacher and admin from seedUser()
     // TODO: Assign courses to teachers, add marks for a student
   } catch (err) {
-    logger.warn(`Something went wrong: ${err.message}`)
+    logger.warn(`seedDatabase(): Something went wrong: ${err.message}`)
   }
 }
 

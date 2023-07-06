@@ -3,11 +3,11 @@
  */
 const { Router } = require("express")
 const router = Router()
-const { extractTokenDetails } = require("../helper/extract-token")
-const { responseStatusCode } = require("../helper/error")
-const marksDB = require("../db/student-marks")
-const userDB = require("../db/user")
-const { errorResponse } = require("../helper/error")
+const { extractTokenDetails } = require("../../helper/extract-token")
+const { responseStatusCode } = require("../../helper/error")
+const marksDB = require("../../db/students/student-marks")
+const userDB = require("../../db/users/user")
+const { errorResponse } = require("../../helper/error")
 
 // Endpoint for student fetch their marks
 router.get("/marks", async function (req, res) {
@@ -96,6 +96,30 @@ router.get("/marks", async function (req, res) {
 
   // return marks of a student
   res.status(200).json(marks.result)
+  return
+})
+
+router.get("/syllabus", async function (req, res) {
+  const tokenDetails = extractTokenDetails(req)
+  // get student id
+  const studentId = await userDB.getStudentId(tokenDetails.id)
+
+  if (studentId.err !== null) {
+    res
+      .status(responseStatusCode.get(studentId.err.error.title) || 400)
+      .json(studentId.err)
+    return
+  }
+
+  const syllabus = await marksDB.getStudentSyllabus(studentId.result.id)
+  if (syllabus.err !== null) {
+    res
+      .status(responseStatusCode.get(syllabus.err.error.title) || 400)
+      .json(syllabus.err)
+    return
+  }
+
+  res.status(200).json(syllabus.result)
   return
 })
 

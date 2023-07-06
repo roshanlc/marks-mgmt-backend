@@ -21,28 +21,31 @@ model Role {
 
 // Basic user details, used for login
 model User {
-  id        Int         @id @default(autoincrement())
-  email     String      @unique
-  password  String
-  name      String
-  address   String?
-  contactNo String?
-  activated Boolean     @default(false)
-  expired   Boolean     @default(false)
-  UserRoles UserRoles[]
-  Student   Student[]
-  Teacher   Teacher[]
-  Admin     Admin[]
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  password    String
+  name        String
+  address     String?
+  contactNo   String?
+  activated   Boolean       @default(false)
+  expired     Boolean       @default(false)
+  UserRoles   UserRoles[]
+  Student     Student[]
+  Teacher     Teacher[]
+  Admin       Admin[]
+  ProgramHead ProgramHead[]
+  ExamHead    ExamHead?
 }
 
 // Table to map users with their roles
 model UserRoles {
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
   role   Role @relation(fields: [roleId], references: [id])
   roleId Int
 
   @@id([userId, roleId])
+  @@unique([userId, roleId])
 }
 
 // A faculty 
@@ -51,6 +54,7 @@ model Faculty {
   name       String       @unique
   head       String?
   Department Department[]
+  ExamHead   ExamHead[]
 }
 
 // A department falls under certain faculty
@@ -58,7 +62,7 @@ model Department {
   id        Int       @id @default(autoincrement())
   name      String    @unique
   head      String?
-  faculty   Faculty   @relation(fields: [facultyId], references: [id])
+  faculty   Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
   facultyId Int
   Program   Program[]
 }
@@ -75,7 +79,7 @@ model Program {
   id               Int                @id @default(autoincrement())
   name             String             @unique
   head             String?
-  department       Department         @relation(fields: [departmentId], references: [id])
+  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   level            Level              @relation(fields: [levelId], references: [id])
   departmentId     Int
   levelId          Int
@@ -85,6 +89,7 @@ model Program {
   ProgramCourses   ProgramCourses[]
   Student          Student[]
   TeacherCourses   TeacherCourses[]
+  ProgramHead      ProgramHead[]
 }
 
 // A semester i.e 1,2,3,...N
@@ -99,7 +104,7 @@ model Semester {
 // A syllabus is for a semester of a program
 model Syllabus {
   id             Int              @id @default(autoincrement())
-  program        Program          @relation(fields: [programId], references: [id])
+  program        Program          @relation(fields: [programId], references: [id], onDelete: Cascade)
   name           String? // to provide title such as old syllabus or current one
   programId      Int
   ProgramCourses ProgramCourses[]
@@ -109,18 +114,19 @@ model Syllabus {
 // total number of semesters a program has
 // B.E Computer has 8 semesters, Arch has 10 semesters
 model ProgramSemesters {
-  program        Program  @relation(fields: [programId], references: [id])
+  program        Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
   programId      Int      @unique
   totalSemesters Semester @relation(fields: [semesterId], references: [id])
   semesterId     Int
 
   @@id([programId, semesterId])
+  @@unique([programId, semesterId])
 }
 
 // Currently running semesters of a program
 // During one time of a year, only odd semesters are running
 model RunningSemesters {
-  program  Program  @relation(fields: [programId], references: [id])
+  program  Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
   semester Semester @relation(fields: [semesterId], references: [id])
   batch    Batch    @relation(fields: [batchId], references: [id])
 
@@ -129,6 +135,7 @@ model RunningSemesters {
   batchId    Int
 
   @@id([programId, semesterId, batchId])
+  @@unique([programId, semesterId, batchId])
 }
 
 model MarkWeightage {
@@ -167,7 +174,7 @@ model ElectiveCourse {
 
 // Courses that fall under a certain program (semester and syllabus)
 model ProgramCourses {
-  program    Program  @relation(fields: [programId], references: [id])
+  program    Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
   semester   Semester @relation(fields: [semesterId], references: [id])
   course     Course   @relation(fields: [courseId], references: [id])
   syllabus   Syllabus @relation(fields: [syllabusId], references: [id])
@@ -177,6 +184,7 @@ model ProgramCourses {
   syllabusId Int
 
   @@id([programId, semesterId, syllabusId, courseId])
+  @@unique([programId, semesterId, syllabusId, courseId])
 }
 
 // TODO: Qn: How to wrap a certain batch run with running semester, teacher courses, and other stuffs????
@@ -187,9 +195,12 @@ model Batch {
   id               Int                @id @default(autoincrement())
   year             Int
   season           Season
+  current          Boolean            @default(false)
   RunningSemesters RunningSemesters[]
   TeacherCourses   TeacherCourses[]
   StudentMarks     StudentMarks[]
+
+  @@unique([year, season])
 }
 
 // Season of the year
@@ -207,11 +218,11 @@ model Student {
   puRegNo  String @unique
 
   semester      Semester        @relation(fields: [semesterId], references: [id])
-  user          User            @relation(fields: [userId], references: [id])
-  program       Program         @relation(fields: [programId], references: [id])
-  syllabus      Syllabus        @relation(fields: [syllabusId], references: [id])
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program       Program         @relation(fields: [programId], references: [id], onDelete: Cascade)
+  syllabus      Syllabus        @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
   semesterId    Int
-  userId        Int
+  userId        Int             @unique
   StudentMarks  StudentMarks[]
   programId     Int
   StudentStatus StudentStatus[]
@@ -221,8 +232,8 @@ model Student {
 // Details about  a teacher
 model Teacher {
   id             Int              @id @default(autoincrement())
-  user           User             @relation(fields: [userId], references: [id])
-  userId         Int
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         Int              @unique
   StudentMarks   StudentMarks[]
   TeacherCourses TeacherCourses[]
 }
@@ -231,17 +242,35 @@ model Teacher {
 
 model Admin {
   id   Int  @id @default(autoincrement())
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId Int
+  userId Int @unique
+}
+
+// account for a profile head
+model ProgramHead {
+  id      Int      @id @default(autoincrement())
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program Program? @relation(fields: [programId], references: [id])
+
+  userId    Int
+  programId Int? @unique
+}
+
+model ExamHead {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  faculty   Faculty? @relation(fields: [facultyId], references: [id])
+  userId    Int      @unique
+  facultyId Int?
 }
 
 // Student and marks in a certain subject
 model StudentMarks {
-  student      Student  @relation(fields: [studentId], references: [id])
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course       Course   @relation(fields: [courseId], references: [id])
   teacher      Teacher? @relation(fields: [teacherId], references: [id])
-  batch        Batch    @relation(fields: [batchId], references: [id])
+  batch        Batch?   @relation(fields: [batchId], references: [id])
   theory       Int?
   practical    Int?
   NotQualified Boolean  @default(false)
@@ -249,14 +278,15 @@ model StudentMarks {
   studentId Int
   courseId  Int
   teacherId Int?
-  batchId   Int
+  batchId   Int?
 
   @@id([studentId, courseId])
+  @@unique([studentId, courseId])
 }
 
 // Teacher and courses taught in a batch
 model TeacherCourses {
-  teacher Teacher @relation(fields: [teacherId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   course  Course  @relation(fields: [courseId], references: [id])
   batch   Batch   @relation(fields: [batchId], references: [id])
   program Program @relation(fields: [programId], references: [id])
@@ -267,6 +297,7 @@ model TeacherCourses {
   programId Int
 
   @@id([teacherId, courseId, programId, batchId])
+  @@unique([teacherId, courseId, programId, batchId])
 }
 
 // Possible status of a student
@@ -278,9 +309,10 @@ enum Status {
 
 // Status of an individual student
 model StudentStatus {
-  student   Student @relation(fields: [studentId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   status    Status
   studentId Int
 
   @@id([studentId, status])
+  @@unique([studentId, status])
 }

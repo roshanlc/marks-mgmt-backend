@@ -92,3 +92,4 @@ jspm_packages/
 .yarn/install-state.gz
 .pnp.*
 todo.md
+all-features.md

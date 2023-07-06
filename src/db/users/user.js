@@ -1,16 +1,18 @@
 // Db actions related to user model
 const { PrismaClient, Prisma } = require("@prisma/client")
 const db = new PrismaClient()
-const { toResult } = require("../helper/result")
+const { toResult } = require("../../helper/result")
 const {
   errorResponse,
   internalServerError,
   badRequestError,
-} = require("../helper/error")
-const logger = require("../helper/logger")
-const { compareHash } = require("../helper/password")
-const { authenticationError, NotFoundError } = require("../helper/error")
+} = require("../../helper/error")
+const logger = require("../../helper/logger")
+const { compareHash, hashPassword } = require("../../helper/password")
+const { authenticationError, NotFoundError } = require("../../helper/error")
 const { assignRoleToUser } = require("./roles")
+const { createMarksForSemesters } = require("../students/student-marks")
+const { getLatestBatch } = require("../programs/others")
 
 /**
  * Get user details
@@ -299,6 +301,7 @@ async function addStudentWithUser(
       return user
     }
 
+    // add new student
     const student = await db.student.create({
       data: {
         symbolNo: symbolNo,
@@ -317,11 +320,23 @@ async function addStudentWithUser(
     }
 
     // valid user creation operation
-    if (user.password) {
-      delete user.password
+    if (user.result.password) {
+      delete user.result.password
     }
     student.user = user.result
     student.user.UserRoles = roleAssign.result
+
+    // get latest batch
+    const latestBatch = await getLatestBatch()
+
+    // try to create student marks and course assignment upto the provided semester
+    const courseMarks = await createMarksForSemesters(
+      student.id,
+      1,
+      semester,
+      latestBatch.err !== null ? 0 : latestBatch.result.id
+    )
+
     return toResult(student, null)
   } catch (err) {
     if (
@@ -389,8 +404,8 @@ async function addTeacherWithUser(
     }
 
     // valid user creation operation
-    if (user.password) {
-      delete user.password
+    if (user.result.password) {
+      delete user.result.password
     }
     teacher.user = user.result
     teacher.user.UserRoles = roleAssign.result
@@ -455,15 +470,16 @@ async function addAdminWithUser(
       },
     })
 
-    const roleAssign = await assignRoleToUser(user.result.id, "teacher")
+    const roleAssign = await assignRoleToUser(user.result.id, "admin")
     if (roleAssign.err !== null) {
       return roleAssign
     }
 
     // valid user creation operation
-    if (user.password) {
-      delete user.password
+    if (user.result.password) {
+      delete user.result.password
     }
+
     admin.user = user.result
     admin.user.UserRoles = roleAssign.result
     return toResult(admin, null)
@@ -491,6 +507,157 @@ async function addAdminWithUser(
   }
 }
 
+/**
+ * Change password of a user
+ * @param {Number} userId  - id of the user
+ * @param {String} oldPassword - old password of a user
+ * @param {String} newPassword  - new password of auser
+ * @returns success msg or corresponding error
+ */
+async function changePassword(userId, newPassword) {
+  try {
+    const newHash = hashPassword(newPassword)
+
+    const userDetails = await db.user.update({
+      where: { id: userId },
+      data: { password: newHash },
+    })
+    // return user details by id
+    return await getUserDetails(userDetails.id)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`changePassword(): ${err.message}`)
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * List of all users
+ * @param {*} roleId - id of the role to filter list by
+ * @returns
+ */
+async function listAllUsers(roleId = 0) {
+  try {
+    let role = {}
+    const response = {}
+    if (roleId > 0) {
+      role = await db.role.findFirstOrThrow({
+        where: { id: roleId },
+        include: { _count: true },
+      })
+      response.role = role
+    }
+
+    // get list of users (by roleId if given)
+    const users = await db.user.findMany({
+      where: {
+        UserRoles: { some: { roleId: roleId > 0 ? roleId : undefined } },
+      },
+      select: {
+        id: true,
+        email: true,
+        password: false,
+        name: true,
+        address: true,
+        contactNo: true,
+        activated: true,
+        expired: true,
+        UserRoles: { include: { role: true } },
+      },
+    })
+
+    response.users = users
+
+    return toResult(response, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`listAllUsers(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+/**
+ * Delete a user from db
+ * It will cause all other user related details to deleted as well
+ * @param {*} userID - id of the user
+ * @returns - deleted user account details or corresponding error
+ */
+async function deleteUser(userID) {
+  try {
+    // all other user related details should be deleted automatically
+    const user = await db.user.delete({
+      where: { id: userID },
+      include: {
+        UserRoles: { include: { role: true } },
+        Admin: true,
+        ExamHead: true,
+        Student: {
+          include: {
+            program: {
+              include: { department: { include: { faculty: true } } },
+            },
+            StudentStatus: true,
+            syllabus: true,
+            semester: true,
+          },
+        },
+        ProgramHead: true,
+        Teacher: true,
+      },
+    })
+
+    // delte password entry from data
+    if (user.password) {
+      delete user.password
+    }
+
+    return toResult(user, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          `Please provide valid details. ${err.meta.cause}`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`deleteUser(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   checkLogin,
   getUserDetails,
@@ -501,4 +668,7 @@ module.exports = {
   addStudentWithUser,
   addTeacherWithUser,
   addAdminWithUser,
+  changePassword,
+  listAllUsers,
+  deleteUser,
 }
