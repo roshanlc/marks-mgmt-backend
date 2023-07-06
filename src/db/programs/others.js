@@ -139,6 +139,7 @@ async function getLatestBatch() {
   try {
     const batchInfo = await db.batch.findFirstOrThrow({
       orderBy: { id: "desc" },
+      where: { current: true },
     })
     return toResult(batchInfo, null)
   } catch (err) {
