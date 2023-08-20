@@ -97,6 +97,8 @@ async function seedUsers() {
         student.semester,
         programId.result.id,
         syllabusId.result.id,
+        student.yearJoined,
+        student.dateOfBirth,
         student.status
       )
     } catch (err) {

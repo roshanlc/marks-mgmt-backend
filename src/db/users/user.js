@@ -282,6 +282,8 @@ async function addStudentWithUser(
   semester,
   programId,
   syallbusId,
+  yearJoined,
+  dateOfBirth,
   status = "ACTIVE"
 ) {
   try {
@@ -309,7 +311,10 @@ async function addStudentWithUser(
         programId: programId,
         puRegNo: puRegNo,
         syllabusId: syallbusId,
+        dateOfBirth: dateOfBirth,
+        yearJoined: yearJoined,
         userId: user.result.id,
+
         StudentStatus: { create: { status: status || "ACTIVE" } },
       },
     })
