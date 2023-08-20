@@ -163,6 +163,8 @@ CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
     "symbolNo" TEXT NOT NULL,
     "puRegNo" TEXT NOT NULL,
+    "yearJoined" INTEGER NOT NULL,
+    "dateOfBirth" TEXT NOT NULL,
     "semesterId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "programId" INTEGER NOT NULL,

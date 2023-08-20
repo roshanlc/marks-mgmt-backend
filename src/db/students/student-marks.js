@@ -526,6 +526,35 @@ async function deleteMarksOfStudentForSemesters(studentId, from, to) {
   }
 }
 
+/**
+ * List all the student marks in the db
+ * @param {*} batchId
+ * @returns
+ */
+async function getAllStudentMarks(batchId = 0) {
+  try {
+    const studentMarks = await db.studentMarks.findMany({
+      where: { batchId: batchId === 0 ? null : batchId },
+    })
+
+    console.log(studentMarks) // remove later
+    return toResult(studentMarks, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else {
+      logger.warn(`getAllStudentMarks(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+getAllStudentMarks()
+
 module.exports = {
   getStudentMarks,
   getStudentMarksBySemester,
@@ -534,4 +563,5 @@ module.exports = {
   createMarksForSemesters,
   deleteMarksOfStudentForCourse,
   deleteMarksOfStudentForSemesters,
+  getAllStudentMarks,
 }
