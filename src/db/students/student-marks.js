@@ -546,12 +546,12 @@ async function getAllStudentMarks(
     // list marks using filters provided
     const studentMarks = await db.studentMarks.findMany({
       where: {
-        batchId: batchId === 0 ? undefined : batchId,
+        batchId: batchId > 0 ? batchId : undefined,
         student: {
-          yearJoined: yearJoined === 0 ? undefined : yearJoined,
-          programId: programId === 0 ? undefined : programId,
-          semesterId: semester === 0 ? undefined : semester,
-          program: { departmentId: deptId === 0 ? undefined : deptId },
+          yearJoined: yearJoined > 0 ? yearJoined : undefined,
+          programId: programId > 0 ? programId : undefined,
+          semesterId: semester > 0 ? semester : undefined,
+          program: { departmentId: deptId > 0 ? deptId : undefined },
         },
       },
       include: {
