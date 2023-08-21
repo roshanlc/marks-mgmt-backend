@@ -212,6 +212,8 @@ CREATE TABLE "StudentMarks" (
     "theory" INTEGER,
     "practical" INTEGER,
     "NotQualified" BOOLEAN NOT NULL DEFAULT false,
+    "absent" BOOLEAN NOT NULL DEFAULT false,
+    "expelled" BOOLEAN NOT NULL DEFAULT false,
     "studentId" INTEGER NOT NULL,
     "courseId" INTEGER NOT NULL,
     "teacherId" INTEGER,

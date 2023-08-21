@@ -268,7 +268,7 @@ model ExamHead {
   facultyId Int?
 }
 
-// Student and marks in a certain subject
+// Student's marks in a certain subject
 model StudentMarks {
   student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course       Course   @relation(fields: [courseId], references: [id])
@@ -277,6 +277,8 @@ model StudentMarks {
   theory       Int?
   practical    Int?
   NotQualified Boolean  @default(false)
+  absent       Boolean  @default(false)
+  expelled     Boolean  @default(false)
 
   studentId Int
   courseId  Int

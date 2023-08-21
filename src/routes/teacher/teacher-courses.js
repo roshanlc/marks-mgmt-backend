@@ -57,7 +57,9 @@ const addMarksSchema = Joi.object({
   theory: Joi.number().min(0).max(100).required(),
   practical: Joi.number().min(0).max(100).required(),
   courseId: Joi.number().min(0).required(),
-  notQualified: Joi.boolean().default(false).required(),
+  notQualified: Joi.boolean().default(false).optional(),
+  absent: Joi.boolean().default(false).optional(),
+  expelled: Joi.boolean().default(false).optional(),
 })
 
 // Endpoint for teacher to add marks of a student for a course
@@ -120,7 +122,9 @@ router.post("/marks", async function (req, res) {
     details.courseId,
     details.theory,
     details.practical,
-    details.notQualified
+    details.notQualified,
+    details.absent,
+    details.expelled
   )
 
   if (marksAddition.err !== null && marksAddition.err !== undefined) {
@@ -246,7 +250,9 @@ router.put("/marks", async function (req, res) {
     details.courseId,
     details.theory,
     details.practical,
-    details.notQualified
+    details.notQualified,
+    details.absent,
+    details.expelled
   )
 
   if (marksAddition.err !== null && marksAddition.err !== undefined) {
@@ -271,7 +277,9 @@ const allStudentsMarksSchema = Joi.object({
         studentId: Joi.number().integer().positive().required(),
         theory: Joi.number().integer().min(0).max(100).required(),
         practical: Joi.number().integer().min(0).max(100).required(),
-        notQualified: Joi.boolean().default(false).required(),
+        notQualified: Joi.boolean().default(false).optional(),
+        absent: Joi.boolean().default(false).optional(),
+        expelled: Joi.boolean().default(false).optional(),
       })
     )
     .required(),
