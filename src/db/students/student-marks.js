@@ -555,6 +555,7 @@ async function getAllStudentMarks(
         },
       },
       include: {
+        batch: true,
         student: {
           include: {
             user: { select: { name: true, email: true, id: true } },
