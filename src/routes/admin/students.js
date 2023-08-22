@@ -54,6 +54,20 @@ router.get("/count", async function (req, res) {
   res.status(200).json(count.result)
 })
 
+// Get list of distinct years joined of  students
+router.get("/years", async function (req, res) {
+  const years = await studentsDb.listAllYearsJoined()
+
+  if (years.err !== null) {
+    res
+      .status(responseStatusCode.get(years.err.error.title) || 400)
+      .json(years.err)
+    return
+  }
+
+  res.status(200).json(years.result)
+})
+
 // list all students
 router.get("/", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
@@ -248,4 +262,5 @@ router.put("/:id", async function (req, res) {
   res.status(200).json(student.result)
   return
 })
+
 module.exports = router

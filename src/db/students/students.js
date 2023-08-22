@@ -416,6 +416,38 @@ async function updateStudentDetails(
   }
 }
 
+/**
+ * List of years joined for students
+ * @returns
+ */
+async function listAllYearsJoined() {
+  try {
+    const years = await db.student.findMany({
+      distinct: ["yearJoined"],
+      select: { yearJoined: true },
+    })
+    return toResult(years, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "Please provide valid details.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`listAllYearsJoined(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   listAllStudents,
   listStudentsBy,
@@ -424,4 +456,5 @@ module.exports = {
   getStudentsCountBy,
   deleteStudent,
   updateStudentDetails,
+  listAllYearsJoined,
 }
