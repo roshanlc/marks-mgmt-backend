@@ -556,7 +556,10 @@ async function getAllStudentMarks(
       },
       include: {
         student: {
-          include: { user: { select: { name: true, email: true, id: true } } },
+          include: {
+            user: { select: { name: true, email: true, id: true } },
+            program: true,
+          },
         },
         course: { include: { ProgramCourses: true } },
       },
