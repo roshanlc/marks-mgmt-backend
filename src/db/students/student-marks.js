@@ -562,7 +562,7 @@ async function getAllStudentMarks(
             program: true,
           },
         },
-        course: { include: { ProgramCourses: true } },
+        course: { include: { ProgramCourses: true, markWeightage: true } },
       },
     })
 
