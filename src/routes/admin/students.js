@@ -73,16 +73,26 @@ router.get("/", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
   const syllabusId = Number(req.query.syllabus_id) || 0
   const departmentId = Number(req.query.dept_id) || 0
+  const semesterId = Number(req.query.semester) || 0
+  const yearJoined = Number(req.query.year_joined) || 0
 
   let allStudents = {}
 
-  if (programId === 0 && syllabusId === 0 && departmentId === 0) {
+  if (
+    programId === 0 &&
+    syllabusId === 0 &&
+    departmentId === 0 &&
+    semesterId == 0 &&
+    yearJoined === 0
+  ) {
     allStudents = await studentsDb.listAllStudents()
   } else {
     allStudents = await studentsDb.listStudentsBy(
       programId,
       syllabusId,
-      departmentId
+      departmentId,
+      semesterId,
+      yearJoined
     )
   }
 

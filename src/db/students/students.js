@@ -59,7 +59,13 @@ async function listAllStudents() {
  * @param {Number} departmentId
  * @returns list of students matching given criteria
  */
-async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
+async function listStudentsBy(
+  programId = 0,
+  syllabusId = 0,
+  departmentId = 0,
+  semester = 0,
+  yearJoined = 0
+) {
   // TODO: add support for listing by status
   try {
     const students = await db.student.findMany({
@@ -67,6 +73,8 @@ async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
         AND: [
           { programId: programId > 0 ? programId : undefined },
           { syllabusId: syllabusId > 0 ? syllabusId : undefined },
+          { semesterId: semester > 0 ? semester : undefined },
+          { yearJoined: yearJoined > 0 ? yearJoined : undefined },
           {
             program: {
               departmentId: departmentId > 0 ? departmentId : undefined,
