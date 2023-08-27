@@ -543,7 +543,16 @@ async function listAllCourses(programId = 0, syllabusId = 0) {
           },
         },
         markWeightage: true,
-        TeacherCourses: true,
+        TeacherCourses: {
+          include: {
+            teacher: {
+              select: {
+                id: true,
+                user: { select: { name: true, email: true } },
+              },
+            },
+          },
+        },
       },
     })
     return toResult(courses, null)
@@ -585,7 +594,16 @@ async function getCourse(courseId = 0, courseCode = "") {
           },
         },
         markWeightage: true,
-        TeacherCourses: true,
+        TeacherCourses: {
+          include: {
+            teacher: {
+              select: {
+                id: true,
+                user: { select: { name: true, email: true } },
+              },
+            },
+          },
+        },
       },
     })
     return toResult(courses, null)
