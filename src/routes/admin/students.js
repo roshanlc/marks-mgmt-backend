@@ -160,6 +160,8 @@ const newStudentSchema = Joi.object({
   contactNo: Joi.string().trim(),
   symbolNo: Joi.string().required().trim(),
   puRegNo: Joi.string().required().trim(),
+  yearJoined: Joi.number().required().positive().min(1950),
+  dateOfBirth: Joi.string().required().trim(),
 })
 
 // Add a new student
@@ -183,6 +185,8 @@ router.post("/", async function (req, res) {
     contactNo,
     symbolNo,
     puRegNo,
+    yearJoined,
+    dateOfBirth,
   } = req.body
 
   // hash of the password
@@ -202,6 +206,8 @@ router.post("/", async function (req, res) {
     semester,
     programId,
     syllabusId,
+    yearJoined,
+    dateOfBirth,
     "ACTIVE"
   )
 

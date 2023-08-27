@@ -154,6 +154,7 @@ CREATE TABLE "Batch" (
     "year" INTEGER NOT NULL,
     "season" "Season" NOT NULL,
     "current" BOOLEAN NOT NULL DEFAULT false,
+    "used" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Batch_pkey" PRIMARY KEY ("id")
 );

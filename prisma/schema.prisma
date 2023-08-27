@@ -197,6 +197,7 @@ model Batch {
   year             Int
   season           Season
   current          Boolean            @default(false)
+  used             Boolean            @default(false)
   RunningSemesters RunningSemesters[]
   TeacherCourses   TeacherCourses[]
   StudentMarks     StudentMarks[]

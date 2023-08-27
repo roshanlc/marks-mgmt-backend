@@ -548,12 +548,19 @@ async function getAllStudentMarks(
       where: {
         batchId: batchId > 0 ? batchId : undefined,
         student: {
-          yearJoined: yearJoined > 0 ? yearJoined : undefined,
-          programId: programId > 0 ? programId : undefined,
-          semesterId: semester > 0 ? semester : undefined,
-          program: { departmentId: deptId > 0 ? deptId : undefined },
+          AND: [
+            { yearJoined: yearJoined > 0 ? yearJoined : undefined },
+            { programId: programId > 0 ? programId : undefined },
+            { program: { departmentId: deptId > 0 ? deptId : undefined } },
+          ],
+        },
+        course: {
+          ProgramCourses: {
+            some: { semesterId: semester > 0 ? semester : undefined },
+          },
         },
       },
+
       include: {
         batch: true,
         student: {
