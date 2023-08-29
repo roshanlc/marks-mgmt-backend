@@ -513,6 +513,78 @@ async function addAdminWithUser(
 }
 
 /**
+ * Creates exam head entry along with corresponding user entry
+ * @returns
+ */
+async function addExamHeadWithUser(
+  email,
+  password,
+  name,
+  address = "",
+  contactNo = "",
+  activated = true,
+  expired = false
+) {
+  try {
+    // TODO: check for invalid input
+
+    // create as a transaction
+    const user = await addUser(
+      email,
+      password,
+      name,
+      address,
+      contactNo,
+      activated,
+      expired
+    )
+    if (user.err !== null) {
+      return user
+    }
+
+    const admin = await db.examHead.create({
+      data: {
+        userId: user.result.id,
+      },
+    })
+
+    const roleAssign = await assignRoleToUser(user.result.id, "examHead")
+    if (roleAssign.err !== null) {
+      return roleAssign
+    }
+
+    // valid user creation operation
+    if (user.result.password) {
+      delete user.result.password
+    }
+
+    admin.user = user.result
+    admin.user.UserRoles = roleAssign.result
+    return toResult(admin, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`addExamHeadWithUser(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+/**
  * Change password of a user
  * @param {Number} userId  - id of the user
  * @param {String} oldPassword - old password of a user
@@ -676,4 +748,5 @@ module.exports = {
   changePassword,
   listAllUsers,
   deleteUser,
+  addExamHeadWithUser,
 }
