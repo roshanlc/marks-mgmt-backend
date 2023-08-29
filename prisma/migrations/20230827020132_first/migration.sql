@@ -154,6 +154,7 @@ CREATE TABLE "Batch" (
     "year" INTEGER NOT NULL,
     "season" "Season" NOT NULL,
     "current" BOOLEAN NOT NULL DEFAULT false,
+    "used" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Batch_pkey" PRIMARY KEY ("id")
 );
@@ -163,6 +164,8 @@ CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
     "symbolNo" TEXT NOT NULL,
     "puRegNo" TEXT NOT NULL,
+    "yearJoined" INTEGER NOT NULL,
+    "dateOfBirth" TEXT NOT NULL,
     "semesterId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "programId" INTEGER NOT NULL,
@@ -210,6 +213,8 @@ CREATE TABLE "StudentMarks" (
     "theory" INTEGER,
     "practical" INTEGER,
     "NotQualified" BOOLEAN NOT NULL DEFAULT false,
+    "absent" BOOLEAN NOT NULL DEFAULT false,
+    "expelled" BOOLEAN NOT NULL DEFAULT false,
     "studentId" INTEGER NOT NULL,
     "courseId" INTEGER NOT NULL,
     "teacherId" INTEGER,

@@ -59,7 +59,13 @@ async function listAllStudents() {
  * @param {Number} departmentId
  * @returns list of students matching given criteria
  */
-async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
+async function listStudentsBy(
+  programId = 0,
+  syllabusId = 0,
+  departmentId = 0,
+  semester = 0,
+  yearJoined = 0
+) {
   // TODO: add support for listing by status
   try {
     const students = await db.student.findMany({
@@ -67,6 +73,8 @@ async function listStudentsBy(programId = 0, syllabusId = 0, departmentId = 0) {
         AND: [
           { programId: programId > 0 ? programId : undefined },
           { syllabusId: syllabusId > 0 ? syllabusId : undefined },
+          { semesterId: semester > 0 ? semester : undefined },
+          { yearJoined: yearJoined > 0 ? yearJoined : undefined },
           {
             program: {
               departmentId: departmentId > 0 ? departmentId : undefined,
@@ -416,6 +424,38 @@ async function updateStudentDetails(
   }
 }
 
+/**
+ * List of years joined for students
+ * @returns
+ */
+async function listAllYearsJoined() {
+  try {
+    const years = await db.student.findMany({
+      distinct: ["yearJoined"],
+      select: { yearJoined: true },
+    })
+    return toResult(years, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "Please provide valid details.")
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        errorResponse("Bad Request", "Something wrong with the request.")
+      )
+    } else {
+      logger.warn(`listAllYearsJoined(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   listAllStudents,
   listStudentsBy,
@@ -424,4 +464,5 @@ module.exports = {
   getStudentsCountBy,
   deleteStudent,
   updateStudentDetails,
+  listAllYearsJoined,
 }

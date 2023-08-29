@@ -18,6 +18,7 @@ const {
   assignCourseToTeacher,
   removeCourseFromTeacher,
   addMultipleCourseToSyllabus,
+  deleteMarkWeightage,
 } = require("../../../db/programs/courses")
 
 // schema for faculty
@@ -57,6 +58,25 @@ router.post("/markweightage", async function (req, res) {
   }
 
   res.status(201).json(markWt.result)
+  return
+})
+
+// delete a markweightage
+router.delete("/markweightage/:id", async function (req, res) {
+  const markWtId = Number(req.params.id) || 0
+  if (markWtId <= 0) {
+    res.status(400).json(badRequestError("Provide a valid mark weightage id."))
+    return
+  }
+
+  const markWt = await deleteMarkWeightage(markWtId)
+
+  if (markWt.err !== null) {
+    res.status(responseStatusCode.get(markWt.err.error.title)).json(markWt.err)
+    return
+  }
+
+  res.status(200).json(markWt.result)
   return
 })
 
@@ -103,7 +123,7 @@ router.post("", async function (req, res) {
 router.put("/:id", async function (req, res) {
   const courseId = Number(req.params.id) || 0
 
-  if (courseId === 0) {
+  if (courseId <= 0) {
     res.status(400).json(badRequestError("Provide a valid course id."))
     return
   }
@@ -139,7 +159,7 @@ router.put("/:id", async function (req, res) {
 router.delete("/:id", async function (req, res) {
   const courseId = Number(req.params.id) || 0
 
-  if (courseId === 0) {
+  if (courseId <= 0) {
     res.status(400).json(badRequestError("Provide a valid course id."))
     return
   }
@@ -164,7 +184,7 @@ const assignCourseSchema = Joi.object({
 router.post("/:id/assign", async function (req, res) {
   const courseId = Number(req.params.id) || 0
 
-  if (courseId === 0) {
+  if (courseId <= 0) {
     res.status(400).json(badRequestError("Provide a valid course id."))
     return
   }
@@ -201,7 +221,7 @@ router.post("/:id/assign", async function (req, res) {
 router.delete("/:id/remove", async function (req, res) {
   const courseId = Number(req.params.id) || 0
 
-  if (courseId === 0) {
+  if (courseId <= 0) {
     res.status(400).json(badRequestError("Provide a valid course id."))
     return
   }
@@ -245,7 +265,7 @@ const teacherAssign = Joi.object({
 router.post("/:id/teacher", async function (req, res) {
   const courseId = Number(req.params.id) || 0
 
-  if (courseId === 0) {
+  if (courseId <= 0) {
     res.status(400).json(badRequestError("Provide a valid course id."))
     return
   }
@@ -276,7 +296,7 @@ router.post("/:id/teacher", async function (req, res) {
 router.delete("/:id/teacher", async function (req, res) {
   const courseId = Number(req.params.id) || 0
 
-  if (courseId === 0) {
+  if (courseId <= 0) {
     res.status(400).json(badRequestError("Provide a valid course id."))
     return
   }

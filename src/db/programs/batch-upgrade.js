@@ -31,7 +31,7 @@ async function upgradeBatch(targetBatchId) {
       where: { id: targetBatchId },
     })
 
-    if (targetBatch.id === currentBatch.result.id) {
+    if (targetBatch.id === currentBatch.result.id || targetBatch.used) {
       return toResult(
         null,
         badRequestError("You cannot upgrade to same batch.")
@@ -145,13 +145,13 @@ async function upgradeBatch(targetBatchId) {
     // set current batch to false
     await db.batch.update({
       where: { id: currentBatch.result.id },
-      data: { current: false },
+      data: { current: false, used: true },
     })
 
     // set target batch as current batch
     const setCurrentBatch = await db.batch.update({
       where: { id: targetBatch.id },
-      data: { current: true },
+      data: { current: true, used: true },
     })
 
     return toResult(setCurrentBatch, null)

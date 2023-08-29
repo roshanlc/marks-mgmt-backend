@@ -97,6 +97,8 @@ async function seedUsers() {
         student.semester,
         programId.result.id,
         syllabusId.result.id,
+        student.yearJoined,
+        student.dateOfBirth,
         student.status
       )
     } catch (err) {
@@ -279,7 +281,7 @@ async function seedCourses() {
 async function createBatch() {
   try {
     const year = new Date().getFullYear()
-    await addBatch(year, "FALL", true)
+    await addBatch(year, "FALL", true, true)
   } catch (err) {
     logger.warn(`createBatch(): Something went wrong, ${err.message}`)
   }

@@ -76,13 +76,14 @@ model Level {
 
 // A program falls under a department and a level 
 model Program {
-  id               Int                @id @default(autoincrement())
-  name             String             @unique
-  head             String?
-  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  level            Level              @relation(fields: [levelId], references: [id])
-  departmentId     Int
-  levelId          Int
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  head         String?
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  level        Level      @relation(fields: [levelId], references: [id])
+  departmentId Int
+  levelId      Int
+
   Syllabus         Syllabus[]
   RunningSemesters RunningSemesters[]
   ProgramSemesters ProgramSemesters[]
@@ -196,6 +197,7 @@ model Batch {
   year             Int
   season           Season
   current          Boolean            @default(false)
+  used             Boolean            @default(false)
   RunningSemesters RunningSemesters[]
   TeacherCourses   TeacherCourses[]
   StudentMarks     StudentMarks[]
@@ -213,9 +215,11 @@ enum Season {
 
 // Details about a student
 model Student {
-  id       Int    @id @default(autoincrement())
-  symbolNo String @unique
-  puRegNo  String @unique
+  id          Int    @id @default(autoincrement())
+  symbolNo    String @unique
+  puRegNo     String @unique
+  yearJoined  Int
+  dateOfBirth String // YYYY-MM-DD
 
   semester      Semester        @relation(fields: [semesterId], references: [id])
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -265,7 +269,7 @@ model ExamHead {
   facultyId Int?
 }
 
-// Student and marks in a certain subject
+// Student's marks in a certain subject
 model StudentMarks {
   student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course       Course   @relation(fields: [courseId], references: [id])
@@ -274,6 +278,8 @@ model StudentMarks {
   theory       Int?
   practical    Int?
   NotQualified Boolean  @default(false)
+  absent       Boolean  @default(false)
+  expelled     Boolean  @default(false)
 
   studentId Int
   courseId  Int

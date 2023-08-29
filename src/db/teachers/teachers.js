@@ -60,6 +60,7 @@ async function listTeachersBy(programId = 0, departmentId = 0) {
         TeacherCourses: {
           include: { course: true, program: true, batch: true },
         },
+        user: { select: { id: true, name: true, email: true } },
       },
     })
 

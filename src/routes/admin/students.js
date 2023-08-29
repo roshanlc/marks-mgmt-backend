@@ -54,21 +54,45 @@ router.get("/count", async function (req, res) {
   res.status(200).json(count.result)
 })
 
+// Get list of distinct years joined of  students
+router.get("/years", async function (req, res) {
+  const years = await studentsDb.listAllYearsJoined()
+
+  if (years.err !== null) {
+    res
+      .status(responseStatusCode.get(years.err.error.title) || 400)
+      .json(years.err)
+    return
+  }
+
+  res.status(200).json(years.result)
+})
+
 // list all students
 router.get("/", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
   const syllabusId = Number(req.query.syllabus_id) || 0
   const departmentId = Number(req.query.dept_id) || 0
+  const semesterId = Number(req.query.semester) || 0
+  const yearJoined = Number(req.query.year_joined) || 0
 
   let allStudents = {}
 
-  if (programId === 0 && syllabusId === 0 && departmentId === 0) {
+  if (
+    programId === 0 &&
+    syllabusId === 0 &&
+    departmentId === 0 &&
+    semesterId == 0 &&
+    yearJoined === 0
+  ) {
     allStudents = await studentsDb.listAllStudents()
   } else {
     allStudents = await studentsDb.listStudentsBy(
       programId,
       syllabusId,
-      departmentId
+      departmentId,
+      semesterId,
+      yearJoined
     )
   }
 
@@ -136,6 +160,8 @@ const newStudentSchema = Joi.object({
   contactNo: Joi.string().trim(),
   symbolNo: Joi.string().required().trim(),
   puRegNo: Joi.string().required().trim(),
+  yearJoined: Joi.number().required().positive().min(1950),
+  dateOfBirth: Joi.string().required().trim(),
 })
 
 // Add a new student
@@ -159,6 +185,8 @@ router.post("/", async function (req, res) {
     contactNo,
     symbolNo,
     puRegNo,
+    yearJoined,
+    dateOfBirth,
   } = req.body
 
   // hash of the password
@@ -178,6 +206,8 @@ router.post("/", async function (req, res) {
     semester,
     programId,
     syllabusId,
+    yearJoined,
+    dateOfBirth,
     "ACTIVE"
   )
 
@@ -248,4 +278,5 @@ router.put("/:id", async function (req, res) {
   res.status(200).json(student.result)
   return
 })
+
 module.exports = router

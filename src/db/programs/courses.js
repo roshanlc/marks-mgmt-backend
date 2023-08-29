@@ -527,25 +527,59 @@ async function removeCourseFromTeacher(teacherId, courseId, programId) {
  */
 async function listAllCourses(programId = 0, syllabusId = 0) {
   try {
-    const courses = await db.course.findMany({
-      where: {
-        ProgramCourses: {
-          some: {
-            programId: programId > 0 ? programId : undefined,
-            syllabusId: syllabusId > 0 ? syllabusId : undefined,
+    let courses = {}
+    if (programId === 0 && syllabusId === 0) {
+      courses = await db.course.findMany({
+        include: {
+          ProgramCourses: {
+            include: {
+              syllabus: { include: { program: true } },
+            },
+          },
+          markWeightage: true,
+          TeacherCourses: {
+            include: {
+              teacher: {
+                select: {
+                  id: true,
+                  user: { select: { name: true, email: true } },
+                },
+              },
+            },
           },
         },
-      },
-      include: {
-        ProgramCourses: {
-          include: {
-            syllabus: { include: { program: true } },
+      })
+    } else {
+      courses = await db.course.findMany({
+        where: {
+          ProgramCourses: {
+            some: {
+              programId: programId > 0 ? programId : undefined,
+              syllabusId: syllabusId > 0 ? syllabusId : undefined,
+            },
           },
         },
-        markWeightage: true,
-        TeacherCourses: true,
-      },
-    })
+        include: {
+          ProgramCourses: {
+            include: {
+              syllabus: { include: { program: true } },
+            },
+          },
+          markWeightage: true,
+          TeacherCourses: {
+            include: {
+              teacher: {
+                select: {
+                  id: true,
+                  user: { select: { name: true, email: true } },
+                },
+              },
+            },
+          },
+        },
+      })
+    }
+
     return toResult(courses, null)
   } catch (err) {
     // check for "NotFoundError" explicitly
@@ -585,7 +619,16 @@ async function getCourse(courseId = 0, courseCode = "") {
           },
         },
         markWeightage: true,
-        TeacherCourses: true,
+        TeacherCourses: {
+          include: {
+            teacher: {
+              select: {
+                id: true,
+                user: { select: { name: true, email: true } },
+              },
+            },
+          },
+        },
       },
     })
     return toResult(courses, null)

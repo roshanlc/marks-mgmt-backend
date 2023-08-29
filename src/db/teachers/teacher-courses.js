@@ -141,7 +141,9 @@ async function addMarksByTeacher(
   courseId,
   theory,
   practical,
-  NotQualified = false
+  NotQualified = false,
+  absent = false,
+  expelled = false
 ) {
   try {
     const batchId = await getLatestBatch()
@@ -160,6 +162,8 @@ async function addMarksByTeacher(
         NotQualified: NotQualified,
         teacherId: teacherId,
         batchId: batchId.result.id,
+        absent: absent,
+        expelled: expelled,
       },
     })
 
@@ -208,7 +212,9 @@ async function updateMarksOfStudent(
   courseId,
   theory,
   practical,
-  NotQualified = false
+  NotQualified = false,
+  absent = false,
+  expelled = false
 ) {
   try {
     const marksAddition = await db.studentMarks.update({
@@ -217,6 +223,8 @@ async function updateMarksOfStudent(
         theory: theory,
         practical: practical,
         NotQualified: NotQualified,
+        absent: absent,
+        expelled: expelled,
       },
     })
 
@@ -344,6 +352,8 @@ async function updateMarksOfAllStudentsForCourse(courseId, marks) {
             theory: item.theory,
             practical: item.practical,
             NotQualified: item.notQualified,
+            absent: item.absent !== undefined ? item.absent : undefined,
+            expelled: item.expelled !== undefined ? item.expelled : undefined,
           },
         })
         .then((response) => success.push({ ...response }))
@@ -431,6 +441,8 @@ async function addMarksOfAllStudentsForCourse(teacherId = 0, courseId, marks) {
             theory: item.theory,
             practical: item.practical,
             NotQualified: item.notQualified,
+            absent: item.absent !== undefined ? item.absent : undefined,
+            expelled: item.expelled !== undefined ? item.expelled : undefined,
             teacherId: teacherId > 0 ? teacherId : undefined,
           },
         })

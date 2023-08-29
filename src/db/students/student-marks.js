@@ -127,7 +127,7 @@ async function getStudentMarksBySemester(studentId, semesterId) {
 
     // if the provided semester id is greater than the current sem
     if (semesterId > currentSem) {
-      toResult(
+      return toResult(
         null,
         errorResponse(
           "Not Found",
@@ -526,6 +526,68 @@ async function deleteMarksOfStudentForSemesters(studentId, from, to) {
   }
 }
 
+/**
+ * List all the student marks in the db
+ * @param {Number} batchId
+ * @param {Number} yearJoined
+ * @param {Number} semester
+ * @param {Number} programId
+ * @param {Number} deptId
+ * @returns list of marks
+ */
+async function getAllStudentMarks(
+  batchId = 0,
+  yearJoined = 0,
+  semester = 0,
+  programId = 0,
+  deptId = 0
+) {
+  try {
+    // list marks using filters provided
+    const studentMarks = await db.studentMarks.findMany({
+      where: {
+        batchId: batchId > 0 ? batchId : undefined,
+        student: {
+          AND: [
+            { yearJoined: yearJoined > 0 ? yearJoined : undefined },
+            { programId: programId > 0 ? programId : undefined },
+            { program: { departmentId: deptId > 0 ? deptId : undefined } },
+          ],
+        },
+        course: {
+          ProgramCourses: {
+            some: { semesterId: semester > 0 ? semester : undefined },
+          },
+        },
+      },
+
+      include: {
+        batch: true,
+        student: {
+          include: {
+            user: { select: { name: true, email: true, id: true } },
+            program: true,
+          },
+        },
+        course: { include: { ProgramCourses: true, markWeightage: true } },
+      },
+    })
+
+    return toResult(studentMarks, null)
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(null, errorResponse("Not Found", err.message))
+    } else {
+      logger.warn(`getAllStudentMarks(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   getStudentMarks,
   getStudentMarksBySemester,
@@ -534,4 +596,5 @@ module.exports = {
   createMarksForSemesters,
   deleteMarksOfStudentForCourse,
   deleteMarksOfStudentForSemesters,
+  getAllStudentMarks,
 }
