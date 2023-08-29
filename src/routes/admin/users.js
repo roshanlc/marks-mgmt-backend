@@ -174,6 +174,7 @@ const updateProfileSchema = Joi.object({
   address: Joi.string().allow("", null).optional().default(""),
   email: Joi.string().allow("", null).optional().default(""),
   contactNo: Joi.string().allow("", null).optional().default(""),
+  password: Joi.string().allow("", null).optional().default(""),
 })
 // update a user's profile
 router.put("/:id/profile", async function (req, res) {
@@ -191,9 +192,16 @@ router.put("/:id/profile", async function (req, res) {
     return
   }
 
-  const { email, name, address, contactNo } = req.body
+  const { email, name, address, contactNo, password } = req.body
 
-  const profile = await updateProfile(userId, email, name, address, contactNo)
+  const profile = await updateProfile(
+    userId,
+    email,
+    name,
+    address,
+    contactNo,
+    password
+  )
 
   // check for errors
   if (profile.err !== null) {
