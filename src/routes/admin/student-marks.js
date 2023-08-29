@@ -19,7 +19,7 @@ router.get("/", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
   const semesterId = Number(req.query.semester) || 0
   const yearJoined = Number(req.query.year_joined) || 0
-  const batchId = Number(req.query.batchId) || 0
+  const batchId = Number(req.query.batch_id) || 0
   const departmentId = Number(req.query.dept_id) || 0
 
   if (
