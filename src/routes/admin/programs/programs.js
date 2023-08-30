@@ -24,7 +24,10 @@ const {
   getBatchById,
   deleteBatchById,
 } = require("../../../db/programs/others")
-const { upgradeBatch } = require("../../../db/programs/batch-upgrade")
+const {
+  upgradeBatch,
+  currentBatchMarksToggle,
+} = require("../../../db/programs/batch-upgrade")
 
 // schema for faculty
 const facultySchema = Joi.object({
@@ -334,6 +337,36 @@ router.post("/batch/upgrade", async function (req, res) {
   }
 
   res.status(201).json(upgradeBatchDetails.result)
+  return
+})
+
+// schema for batch upgrade
+const marksToggleSchema = Joi.object({
+  marksCollect: Joi.boolean().required("marksCollect is required"),
+})
+
+// enable or disable marks collection for current batch
+router.put("/batch/current", async function (req, res) {
+  const err = marksToggleSchema.validate(req.body).error
+
+  // incase of errors during body validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+  const toggle = req.body.marksCollect || false
+
+  const marksToggle = await currentBatchMarksToggle(toggle)
+
+  // in case of error
+  if (marksToggle.err !== null) {
+    res
+      .status(responseStatusCode.get(marksToggle.err.error.title))
+      .json(marksToggle.err)
+    return
+  }
+
+  res.status(200).json(marksToggle.result)
   return
 })
 

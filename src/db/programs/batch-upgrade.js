@@ -278,4 +278,58 @@ async function updateRunningSemesters() {
   }
 }
 
-module.exports = { updateRunningSemesters, upgradeBatch }
+/**
+ * Enable or disable marks collection for the current semester/batch
+ * @param {boolean} toggle
+ * @returns
+ */
+async function currentBatchMarksToggle(toggle = false) {
+  try {
+    const latestBatch = await getLatestBatch()
+
+    if (latestBatch.err !== null) {
+      return latestBatch
+    }
+
+    const result = await db.batch.update({
+      where: { id: latestBatch.result.id },
+      data: { marksCollect: toggle },
+    })
+
+    return toResult(result, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        NotFoundError(`Please provide valid details. ${err?.meta?.cause}`)
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`currentBatchMarksToggle(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+module.exports = {
+  updateRunningSemesters,
+  upgradeBatch,
+  currentBatchMarksToggle,
+}
