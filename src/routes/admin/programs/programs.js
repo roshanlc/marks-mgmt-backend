@@ -265,6 +265,7 @@ router.post("/level", async function (req, res) {
 const batchSchema = Joi.object({
   year: Joi.number().required().positive().min(2000),
   season: Joi.string().required().valid("FALL", "WINTER", "SPRING", "SUMMER"),
+  used: Joi.boolean().required(),
 })
 
 // create a new batch
@@ -277,8 +278,8 @@ router.post("/batch", async function (req, res) {
     return
   }
 
-  const { year, season } = req.body
-  const batch = await addBatch(year, season)
+  const { year, season, used } = req.body
+  const batch = await addBatch(year, season, false, used)
 
   if (batch.err !== null) {
     res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
