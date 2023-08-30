@@ -554,8 +554,10 @@ async function listAllCourses(programId = 0, syllabusId = 0) {
         where: {
           ProgramCourses: {
             some: {
-              programId: programId > 0 ? programId : undefined,
-              syllabusId: syllabusId > 0 ? syllabusId : undefined,
+              AND: [
+                { programId: programId > 0 ? programId : undefined },
+                { syllabusId: syllabusId > 0 ? syllabusId : undefined },
+              ],
             },
           },
         },

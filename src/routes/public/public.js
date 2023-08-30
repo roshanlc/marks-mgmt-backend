@@ -47,7 +47,7 @@ router.get("/faculties/:id", async function (req, res) {
   const faculties = await getFacultyById(Number(id) || 0)
   if (faculties.err !== null) {
     res
-      .header("Cache-Control", "public, max-age=604800")
+      // .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(faculties.err.error.title) || 400)
       .json(faculties.err)
     return
@@ -68,7 +68,7 @@ router.get("/departments", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(depts.result)
   return
@@ -86,7 +86,7 @@ router.get("/departments/:id", async function (req, res) {
   const dept = await getDepartmentById(Number(id) || 0)
   if (dept.err !== null) {
     res
-      .header("Cache-Control", "public, max-age=604800")
+      // .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(dept.err.error.title) || 400)
       .json(dept.err)
     return
@@ -101,7 +101,7 @@ router.get("/programs", async function (req, res) {
   const programs = await getPrograms()
   if (programs.err !== null) {
     res
-      .header("Cache-Control", "public, max-age=604800")
+      // .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(programs.err.error.title) || 400)
       .json(programs.err)
     return
@@ -129,7 +129,7 @@ router.get("/programs/:id", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(program.result)
   return
@@ -152,7 +152,7 @@ router.get("/syllabus", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(syallbus.result)
   return
@@ -176,7 +176,7 @@ router.get("/syllabus/:id", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(syallbus.result)
   return
@@ -185,9 +185,9 @@ router.get("/syllabus/:id", async function (req, res) {
 //get all courses
 router.get("/courses", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
-  const syallbusId = Number(req.query.syallbus_id) || 0
+  const syllabusId = Number(req.query.syllabus_id) || 0
 
-  const courses = await listAllCourses(programId, syallbusId)
+  const courses = await listAllCourses(programId, syllabusId)
 
   if (courses.err !== null) {
     res
@@ -197,7 +197,7 @@ router.get("/courses", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(courses.result)
   return
@@ -221,7 +221,7 @@ router.get("/courses/:id", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(courses.result)
   return
