@@ -395,7 +395,10 @@ router.post("/import", upload.single("file"), async (req, res) => {
     const file = req.file
 
     // check for mimetype
-    if (file.mimetype !== "text/csv") {
+    if (
+      file.mimetype !== "text/csv" &&
+      file.mimetype !== "application/vnd.ms-excel"
+    ) {
       res.status(400).json(badRequestError("Only CSV file is allowed."))
       return
     }
