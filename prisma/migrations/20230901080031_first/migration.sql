@@ -273,6 +273,12 @@ CREATE UNIQUE INDEX "ProgramSemesters_programId_semesterId_key" ON "ProgramSemes
 CREATE UNIQUE INDEX "RunningSemesters_programId_semesterId_batchId_key" ON "RunningSemesters"("programId", "semesterId", "batchId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "MarkWeightage_theory_key" ON "MarkWeightage"("theory");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MarkWeightage_practical_key" ON "MarkWeightage"("practical");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Course_code_key" ON "Course"("code");
 
 -- CreateIndex

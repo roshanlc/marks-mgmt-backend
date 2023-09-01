@@ -141,8 +141,8 @@ model RunningSemesters {
 
 model MarkWeightage {
   id        Int      @id @default(autoincrement())
-  theory    Int
-  practical Int
+  theory    Int      @unique
+  practical Int      @unique
   Course    Course[]
 }
 
