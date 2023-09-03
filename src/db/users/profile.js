@@ -30,7 +30,7 @@ async function getProfileDetails(userId) {
             semester: true,
           },
         },
-        ProgramHead: true,
+        // ProgramHead: true,
         Teacher: true,
       },
     })
@@ -116,7 +116,7 @@ async function updateProfile(
             semester: true,
           },
         },
-        ProgramHead: true,
+        // ProgramHead: true,
         Teacher: true,
       },
     })

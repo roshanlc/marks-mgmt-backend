@@ -700,7 +700,7 @@ async function deleteUser(userID) {
             semester: true,
           },
         },
-        ProgramHead: true,
+        // ProgramHead: true,
         Teacher: true,
       },
     })

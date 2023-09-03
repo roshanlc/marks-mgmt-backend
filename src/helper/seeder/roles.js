@@ -9,11 +9,11 @@ const roles = [
     description:
       "The teacher can add, modify and view marks of students for the courses taught.",
   },
-  {
-    name: "programHead",
-    description:
-      "The program head can view marks of all students enrolled in the program.",
-  },
+  // {
+  //   name: "programHead",
+  //   description:
+  //     "The program head can view marks of all students enrolled in the program.",
+  // },
   {
     name: "examHead",
     description:

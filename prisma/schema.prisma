@@ -21,20 +21,20 @@ model Role {
 
 // Basic user details, used for login
 model User {
-  id          Int           @id @default(autoincrement())
-  email       String        @unique
-  password    String
-  name        String
-  address     String?
-  contactNo   String?
-  activated   Boolean       @default(false)
-  expired     Boolean       @default(false)
-  UserRoles   UserRoles[]
-  Student     Student[]
-  Teacher     Teacher[]
-  Admin       Admin[]
-  ProgramHead ProgramHead[]
-  ExamHead    ExamHead?
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  password  String
+  name      String
+  address   String?
+  contactNo String?
+  activated Boolean     @default(false)
+  expired   Boolean     @default(false)
+  UserRoles UserRoles[]
+  Student   Student[]
+  Teacher   Teacher[]
+  Admin     Admin[]
+  // ProgramHead ProgramHead[]
+  ExamHead  ExamHead?
 }
 
 // Table to map users with their roles
@@ -90,7 +90,7 @@ model Program {
   ProgramCourses   ProgramCourses[]
   Student          Student[]
   TeacherCourses   TeacherCourses[]
-  ProgramHead      ProgramHead[]
+  // ProgramHead      ProgramHead[]
 }
 
 // A semester i.e 1,2,3,...N
@@ -252,15 +252,15 @@ model Admin {
   userId Int @unique
 }
 
-// account for a profile head
-model ProgramHead {
-  id      Int      @id @default(autoincrement())
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  program Program? @relation(fields: [programId], references: [id])
+// // account for a profile head
+// model ProgramHead {
+//   id      Int      @id @default(autoincrement())
+//   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   program Program? @relation(fields: [programId], references: [id])
 
-  userId    Int
-  programId Int? @unique
-}
+//   userId    Int
+//   programId Int? @unique
+// }
 
 model ExamHead {
   id        Int      @id @default(autoincrement())
