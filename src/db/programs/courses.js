@@ -739,7 +739,7 @@ async function findOrCreateMarkWeightage(theory, practical) {
       where: { theory: theory, practical: practical },
     })
 
-    if (markWt === undefined) {
+    if (markWt === undefined || markWt === null) {
       const newMarkWt = await db.markWeightage.create({
         data: { theory: theory, practical: practical },
       })

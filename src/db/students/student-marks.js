@@ -13,6 +13,16 @@ const {
 const { toResult } = require("../../helper/result")
 const { getLatestBatch } = require("../programs/others")
 const { courses } = require("../../helper/seeder/courses")
+const { addMarksByTeacher } = require("../teachers/teacher-courses")
+
+// cache for batches
+const batchArray = []
+
+// course cache
+const courseArray = []
+
+// student cache
+const studentArray = []
 
 /**
  * Returns all the marks of a student grouped by semester
@@ -588,6 +598,192 @@ async function getAllStudentMarks(
   }
 }
 
+/**
+ * Import marks data of students in bulk
+ * @param {*} data
+ * @returns
+ */
+async function importStudentMarks(data) {
+  try {
+    let validQueries = []
+    let invalidQueries = []
+
+    for (const record of data) {
+      // batch details
+      let batchDetails = {}
+
+      const items = record?.batch?.trim().split(" ") || ""
+      if (items !== "") {
+        if (items.length !== 2) {
+          invalidQueries.push(record)
+          continue
+        }
+
+        const year = Number(items[0])
+
+        if (year < 1980 && year > 2050) {
+          invalidQueries.push(record)
+          continue
+        }
+        const season = items[1].toUpperCase()
+
+        batchDetails = await findOrCreateBatch(year, season)
+      }
+
+      // course details
+      let courseDetails = {}
+
+      const course = courseArray.filter(
+        (course) =>
+          course.name.trim().toLowerCase() ===
+          record.course.trim().toLowerCase()
+      )
+
+      if (course.length === 0 || course === null) {
+        courseDetails = await db.course.findFirst({
+          where: { name: { contains: record.course, mode: "insensitive" } },
+        })
+        courseArray.push(courseDetails)
+      } else {
+        // the filtered array
+        courseDetails = course[0]
+      }
+
+      try {
+        const studentObj = studentArray.filter(
+          (std) => std.symbolNo === record.symbolNo
+        )
+
+        let stdDetails = {}
+        if (studentObj.length === 0 || studentObj === null) {
+          stdDetails = await db.student.findFirst({
+            where: { symbolNo: record.symbolNo },
+          })
+
+          if (stdDetails === undefined || stdDetails === null) {
+            invalidQueries.push(record)
+            continue
+          }
+
+          studentArray.push(stdDetails)
+        } else {
+          // the filtered array
+          stdDetails = course[0]
+        }
+
+        const nQ = record.notQualified.toLowerCase() === "yes" ? true : false
+        const expelled = record.expelled.toLowerCase() === "yes" ? true : false
+        const absent = record.absent.toLowerCase() === "yes" ? true : false
+
+        const studentMarks = await db.studentMarks.upsert({
+          where: {
+            studentId_courseId: {
+              studentId: stdDetails.id,
+              courseId: courseDetails.id,
+            },
+          },
+
+          create: {
+            studentId: stdDetails.id,
+            courseId: courseDetails.id,
+            theory: Number(record.theory),
+            practical: Number(record.practical),
+            NotQualified: nQ,
+            expelled: expelled,
+            absent: absent,
+            batchId: batchDetails === {} ? undefined : batchDetails.id,
+          },
+          update: {
+            studentId: stdDetails.id,
+            courseId: courseDetails.id,
+            theory: Number(record.theory),
+            practical: Number(record.practical),
+            NotQualified: nQ,
+            expelled: expelled,
+            absent: absent,
+            batchId: batchDetails === {} ? undefined : batchDetails.id,
+          },
+        })
+        validQueries.push(studentMarks)
+      } catch (err) {
+        console.log(err)
+        invalidQueries.push(record)
+      }
+    }
+    return toResult(
+      { validQueries: validQueries, invalidQueries: invalidQueries },
+      null
+    )
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`importStudentMarks(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+// create or find batch
+async function findOrCreateBatch(year, season) {
+  if (batchArray.length === 0) {
+    const batch = await db.batch.findFirst({
+      where: { AND: [{ year: year }, { season: season }] },
+    })
+
+    if (batch === undefined || batch === null) {
+      const newBatch = await db.batch.create({
+        data: { year: year, season: season, used: true },
+      })
+
+      // add to the cache
+      batchArray.push(newBatch)
+      return newBatch
+    }
+    batchArray.push(batch)
+    return batch
+  }
+
+  const batchObj = batchArray.filter(
+    (item) =>
+      item.year === year && item.season.toUpperCase() === season.toUpperCase()
+  )
+
+  if (batchObj === undefined || batchObj.length === 0) {
+    const batch = await db.batch.findFirst({
+      where: { AND: [{ year: year }, { season: season }] },
+    })
+
+    if (batch === undefined || batch === null) {
+      const newBatch = await db.batch.create({
+        data: { year: year, season: season, used: true },
+      })
+
+      // add to the cache
+      batchArray.push(newBatch)
+      return newBatch
+    }
+    batchArray.push(batch)
+    return batch
+  }
+
+  return batchObj[0]
+}
+
 module.exports = {
   getStudentMarks,
   getStudentMarksBySemester,
@@ -597,4 +793,5 @@ module.exports = {
   deleteMarksOfStudentForCourse,
   deleteMarksOfStudentForSemesters,
   getAllStudentMarks,
+  importStudentMarks,
 }
