@@ -192,15 +192,6 @@ CREATE TABLE "Admin" (
 );
 
 -- CreateTable
-CREATE TABLE "ProgramHead" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "programId" INTEGER,
-
-    CONSTRAINT "ProgramHead_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "ExamHead" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -309,9 +300,6 @@ CREATE UNIQUE INDEX "Teacher_userId_key" ON "Teacher"("userId");
 CREATE UNIQUE INDEX "Admin_userId_key" ON "Admin"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ProgramHead_programId_key" ON "ProgramHead"("programId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "ExamHead_userId_key" ON "ExamHead"("userId");
 
 -- CreateIndex
@@ -391,12 +379,6 @@ ALTER TABLE "Teacher" ADD CONSTRAINT "Teacher_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ProgramHead" ADD CONSTRAINT "ProgramHead_programId_fkey" FOREIGN KEY ("programId") REFERENCES "Program"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ExamHead" ADD CONSTRAINT "ExamHead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
