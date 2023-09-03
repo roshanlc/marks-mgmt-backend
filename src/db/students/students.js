@@ -1,13 +1,19 @@
 // Db actions related to user model
 const { PrismaClient, Prisma } = require("@prisma/client")
 const { toResult } = require("../../helper/result")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  badRequestError,
+} = require("../../helper/error")
 const logger = require("../../helper/logger")
 const {
   createMarksForSemesters,
   deleteMarksOfStudentForSemesters,
 } = require("./student-marks")
 const { getLatestBatch } = require("../programs/others")
+const { addStudentWithUser } = require("../users/user")
+const { hashPassword } = require("../../helper/password")
 const db = new PrismaClient()
 
 /**
@@ -456,6 +462,70 @@ async function listAllYearsJoined() {
   }
 }
 
+/**
+ * Import data in bulk
+ * @param {*} data
+ * @returns
+ */
+async function importStudents(data) {
+  try {
+    let validQueries = []
+    let invalidQueries = []
+
+    for (const record of data) {
+      const hash = hashPassword(record.dob)
+      const student = await addStudentWithUser(
+        record.email,
+        hash,
+        record.name,
+        record.address,
+        record.address,
+        true,
+        false,
+        record.symbolNo,
+        record.puRegNo,
+        Number(record.semester),
+        Number(record.programId),
+        Number(record.syllabusId),
+        Number(record.joined),
+        record.dob
+      )
+
+      if (student.err !== null) {
+        console.log(student.err)
+        invalidQueries.push(record)
+      } else {
+        validQueries.push(student.result)
+      }
+    }
+    return toResult(
+      { validQueries: validQueries, invalidQueries: invalidQueries },
+      null
+    )
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`importStudents(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   listAllStudents,
   listStudentsBy,
@@ -465,4 +535,5 @@ module.exports = {
   deleteStudent,
   updateStudentDetails,
   listAllYearsJoined,
+  importStudents,
 }
