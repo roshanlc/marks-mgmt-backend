@@ -327,6 +327,9 @@ router.post("/import", upload.single("file"), async (req, res) => {
       columns: true,
       delimiter: ",",
       autoParse: true,
+      skip_empty_lines: true,
+      trim: true,
+      skip_records_with_empty_values: true,
     })
 
     const students = await studentsDb.importStudents(records)
