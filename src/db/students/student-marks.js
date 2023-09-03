@@ -668,7 +668,7 @@ async function importStudentMarks(data) {
           studentArray.push(stdDetails)
         } else {
           // the filtered array
-          stdDetails = course[0]
+          stdDetails = studentObj[0]
         }
 
         const nQ = record.notQualified.toLowerCase() === "yes" ? true : false
@@ -706,7 +706,6 @@ async function importStudentMarks(data) {
         })
         validQueries.push(studentMarks)
       } catch (err) {
-        console.log(err)
         invalidQueries.push(record)
       }
     }
