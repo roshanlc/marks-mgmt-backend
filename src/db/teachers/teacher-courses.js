@@ -284,7 +284,7 @@ async function viewMarksByTeacher(teacherId, courseId, programId) {
       where: {
         AND: [
           { courseId: courseId },
-          { teacherId: teacherId },
+          // { teacherId: teacherId }, // Multiple teacher may be teaching the same course
           {
             batchId: latestBatch.result.id,
             student: { programId: programId },
