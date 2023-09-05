@@ -13,6 +13,8 @@ const { authenticationError, NotFoundError } = require("../../helper/error")
 const { assignRoleToUser } = require("./roles")
 const { createMarksForSemesters } = require("../students/student-marks")
 const { getLatestBatch } = require("../programs/others")
+const generator = require("generate-password")
+const { sendMail } = require("../../helper/mailer")
 
 /**
  * Get user details
@@ -735,6 +737,74 @@ async function deleteUser(userID) {
   }
 }
 
+/**
+ * Reset user password with random password and the random password is emailed to user
+ * @param {*} userId - id of the user
+ * @returns
+ */
+async function resetUserPassword(email) {
+  try {
+    const generated = generator.generate({
+      length: 20,
+      numbers: true,
+    })
+    const newHash = hashPassword(generated)
+
+    const userDetails = await db.user.update({
+      where: { email: email },
+      data: { password: newHash },
+    })
+
+    // send mail to user
+    sendMail(
+      userDetails.email,
+      "Your new password for IMMS account",
+      generateEmailText(generated)
+    )
+    // return user details by id
+    return toResult(
+      {
+        msg: "The user password has been reset and emailed to user. Please check the email.",
+      },
+      null
+    )
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          "Please provide an existent user email account."
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`resetUserPassword(): ${err.message}`)
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+// generate text for email reset
+function generateEmailText(generatedPw) {
+  return `
+  Dear user,
+  
+  Your password has been reset and the current password is ${generatedPw}.
+  
+  Please login to your account and change the password immediately.
+  
+  Regards,
+  IMMS team.`
+}
+
 module.exports = {
   checkLogin,
   getUserDetails,
@@ -749,4 +819,5 @@ module.exports = {
   listAllUsers,
   deleteUser,
   addExamHeadWithUser,
+  resetUserPassword,
 }

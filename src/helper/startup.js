@@ -20,7 +20,12 @@ function checkDbConnection() {
  */
 
 function verifyConfiguration() {
-  const configs = ["DATABASE_URL", "JWT_SECRET"]
+  const configs = [
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "GMAIL_ID",
+    "GMAIL_GENERATED_PW",
+  ]
 
   for (let i = 0; i < configs.length; i++) {
     if (!(configs[i] in process.env)) {
