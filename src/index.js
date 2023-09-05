@@ -17,6 +17,7 @@ const {
   adminRoleHandler,
   teacherRoleHandler,
   studentRoleHandler,
+  adminorExamHeadRoleHandler,
 } = require("./middlewares/roles-handler")
 const tokenValidationHandler = require("./routes/auth/tokens")
 const teacherCoursesRouter = require("./routes/teacher/teacher-courses")
@@ -88,7 +89,7 @@ app.use("/api/v1/students", authHandler, studentRoleHandler, studentMarksRouter)
 app.use(
   "/api/v1/admin/students",
   authHandler,
-  adminRoleHandler,
+  adminorExamHeadRoleHandler,
   listStudentsRouter
 )
 
@@ -102,22 +103,37 @@ app.use(
 app.use(
   "/api/v1/admin/teachers",
   authHandler,
-  adminRoleHandler,
+  adminorExamHeadRoleHandler,
   listTeachersRouter
 )
 
 app.use(
   "/api/v1/admin/divisions",
   authHandler,
-  adminRoleHandler,
+  adminorExamHeadRoleHandler,
   academicDivisionRouter
 )
 
-app.use("/api/v1/admin/courses", authHandler, adminRoleHandler, coursesRouter)
+app.use(
+  "/api/v1/admin/courses",
+  authHandler,
+  adminorExamHeadRoleHandler,
+  coursesRouter
+)
 
-app.use("/api/v1/admin/users", authHandler, adminRoleHandler, userDetailsRouter)
+app.use(
+  "/api/v1/admin/users",
+  authHandler,
+  adminorExamHeadRoleHandler,
+  userDetailsRouter
+)
 
-app.use("/api/v1/admin/marks", authHandler, adminRoleHandler, adminMarksRouter)
+app.use(
+  "/api/v1/admin/marks",
+  authHandler,
+  adminorExamHeadRoleHandler,
+  adminMarksRouter
+)
 
 // A basic endpoint to verify token validity
 // TODO: remove after project completion
