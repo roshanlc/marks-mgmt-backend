@@ -783,6 +783,38 @@ async function findOrCreateBatch(year, season) {
   return batchObj[0]
 }
 
+// get student marks based on student details
+async function getStudentMarksByDetails(email, dob, symbolNo, puRegNo) {
+  try {
+    // get student id from given details
+    const student = await db.student.findFirstOrThrow({
+      where: {
+        symbolNo: symbolNo,
+        puRegNo: puRegNo,
+        dateOfBirth: dob,
+        user: { email: email },
+      },
+    })
+
+    // fetch marks
+    const marks = await getStudentMarks(student.id)
+    return marks
+  } catch (err) {
+    // check for "NotFoundError" explicitly
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.name === "NotFoundError"
+    ) {
+      return toResult(
+        null,
+        errorResponse("Not Found", "Please provide valid details.")
+      )
+    } else {
+      logger.warn(`getStudentMarksByDetails(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
 module.exports = {
   getStudentMarks,
   getStudentMarksBySemester,
@@ -793,4 +825,5 @@ module.exports = {
   deleteMarksOfStudentForSemesters,
   getAllStudentMarks,
   importStudentMarks,
+  getStudentMarksByDetails,
 }

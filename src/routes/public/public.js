@@ -20,6 +20,12 @@ const {
   getCurrentBatch,
 } = require("../../db/programs/others")
 const { listAllCourses, getCourse } = require("../../db/programs/courses")
+const Joi = require("joi")
+const { escapeColon } = require("../../helper/utils")
+const {
+  getStudentMarks,
+  getStudentMarksByDetails,
+} = require("../../db/students/student-marks")
 
 //get all faculties
 router.get("/faculties", async function (req, res) {
@@ -280,6 +286,56 @@ router.get("/levels", async function (req, res) {
   }
 
   res.status(200).json(levels.result)
+  return
+})
+
+// schema for details
+const details = Joi.object({
+  email: Joi.string().email().required().trim(),
+  symbolNo: Joi.string()
+    .trim()
+    .min(8)
+    .max(20)
+    .required("symbol_no is required"),
+  puRegNo: Joi.string().trim().min(8).max(20).required("pu_reg is required"),
+  dob: Joi.string().min(10).max(10).required("dob is required"),
+})
+
+// get student marks
+router.get("/marks", async function (req, res) {
+  const email = req.query.email || ""
+  const symbolNo = req.query.symbol_no || ""
+  const puRegNo = req.query.pu_reg || ""
+  const dateOfBirth = req.query.dob || ""
+
+  const data = {
+    email: email,
+    symbolNo: symbolNo,
+    puRegNo: puRegNo,
+    dob: dateOfBirth,
+  }
+
+  const err = details.validate(data).error
+  if (err !== null) {
+    if (err !== undefined && err !== null) {
+      res.status(400).json(badRequestError(escapeColon(err.message)))
+      return
+    }
+  }
+
+  const marks = await getStudentMarksByDetails(
+    email,
+    dateOfBirth,
+    symbolNo,
+    puRegNo
+  )
+
+  if (marks.err !== null) {
+    res.status(responseStatusCode.get(marks.err.error.title)).json(marks.err)
+    return
+  }
+
+  res.status(200).json(marks.result)
   return
 })
 module.exports = router
