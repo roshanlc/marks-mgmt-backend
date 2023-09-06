@@ -80,6 +80,23 @@ async function upgradeBatch(targetBatchId) {
             },
             data: { status: "ARCHIVE" },
           })
+
+          // also make their account expired
+          const usersUpdate = await db.user.updateMany({
+            where: {
+              Student: {
+                some: {
+                  AND: [
+                    { programId: prog.id },
+                    { semesterId: semester.semesterId },
+                  ],
+                },
+              },
+            },
+            data: { expired: true },
+          })
+
+          console.log(usersUpdate) // remove later
         } else if (semester.semesterId < maxSem) {
           const nextSem = semester.semesterId + 1 // semester to upgrade to
 
