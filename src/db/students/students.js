@@ -367,6 +367,14 @@ async function updateStudentDetails(
       },
     })
 
+    // check for droupout of user
+    const userUpdate = await db.user.update({
+      where: { id: newDetails.userId },
+      data: {
+        expired: status.toUpperCase() === "DROPOUT" ? true : false,
+      },
+    })
+
     // upgrade or downgrade semester
     // Downgrade will delete course marks of student of higher semesters
     const semDiff = newDetails.semesterId - oldDetails.semesterId
