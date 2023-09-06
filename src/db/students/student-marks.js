@@ -36,6 +36,7 @@ async function getStudentMarks(studentId) {
       where: { id: studentId },
       include: {
         program: { select: { name: true, department: true, level: true } },
+        user: { select: { name: true, email: true } },
       },
     })
 
