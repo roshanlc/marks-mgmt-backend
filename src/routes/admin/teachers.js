@@ -7,6 +7,7 @@ const {
   responseStatusCode,
   errorResponse,
   badRequestError,
+  internalServerError,
 } = require("../../helper/error")
 const {
   getAllTeachersCount,
@@ -14,11 +15,16 @@ const {
   listTeachersBy,
   getATeacherDetails,
   deleteTeacher,
+  importTeachers,
 } = require("../../db/teachers/teachers")
 const Joi = require("joi")
 const { escapeColon } = require("../../helper/utils")
 const { hashPassword } = require("../../helper/password")
 const { addTeacherWithUser } = require("../../db/users/user")
+const fs = require("fs")
+const os = require("os")
+const multer = require("multer")
+const { parse, CsvError } = require("csv-parse/sync")
 
 // Get count of teachers
 router.get("/count", async function (req, res) {
@@ -151,6 +157,78 @@ router.delete("/:id", async function (req, res) {
   }
 
   res.status(200).json(teacher.result)
+})
+
+// Configure multer storage and file size limit
+const storage = multer.diskStorage({
+  destination: os.tmpdir(),
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname)
+  },
+})
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 1.1, // 1 MB file size limit
+    files: 1,
+  },
+})
+// Import teacher details as csv file
+router.post("/import", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json(badRequestError("No file field found."))
+      return
+    }
+
+    const file = req.file
+
+    // check for mimetype
+    if (
+      file.mimetype !== "text/csv" &&
+      file.mimetype !== "application/vnd.ms-excel"
+    ) {
+      res.status(400).json(badRequestError("Only CSV file is allowed."))
+      return
+    }
+
+    // read file
+    const data = fs.readFileSync(file.path)
+
+    // parse csv
+    const records = parse(data, {
+      columns: true,
+      delimiter: ",",
+      autoParse: true,
+      skip_empty_lines: true,
+      trim: true,
+      skip_records_with_empty_values: true,
+    })
+
+    const students = await importTeachers(records)
+
+    // check for error
+    if (students.err !== null) {
+      res
+        .status(responseStatusCode.get(students.err.error.title))
+        .json(students.err)
+    } else {
+      res.status(201).send(students.result)
+    }
+    // delete the file
+    fs.unlinkSync(file.path)
+    return
+  } catch (err) {
+    if (err instanceof CsvError && err.code === "INVALID_OPENING_QUOTE") {
+      res
+        .status(400)
+        .json(badRequestError("Only a proper CSV file is allowed."))
+      return
+    }
+    console.log(err)
+    res.send(internalServerError())
+  }
 })
 
 module.exports = router
