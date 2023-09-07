@@ -6,10 +6,10 @@ const faculties = [
     name: "Faculty of Science and Technology",
     head: "",
   },
-  {
-    name: "Faculty of Management",
-    head: "",
-  },
+  // {
+  //   name: "Faculty of Management",
+  //   head: "",
+  // },
 ]
 
 const departments = [
