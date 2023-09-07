@@ -636,11 +636,11 @@ async function importStudentMarks(data) {
 
       const course = courseArray.filter(
         (course) =>
-          course.name.trim().toLowerCase() ===
-          record.course.trim().toLowerCase()
+          course?.name?.trim().toLowerCase() ===
+          record?.course?.trim().toLowerCase()
       )
 
-      if (course.length === 0 || course === null) {
+      if (course.length === 0 || course === null || course === undefined) {
         courseDetails = await db.course.findFirst({
           where: { name: { contains: record.course, mode: "insensitive" } },
         })
@@ -707,6 +707,9 @@ async function importStudentMarks(data) {
         })
         validQueries.push(studentMarks)
       } catch (err) {
+        console.log("Record name: ", record.course)
+        console.log(courseDetails) // remove later
+        console.log(err)
         invalidQueries.push(record)
       }
     }
@@ -732,6 +735,7 @@ async function importStudentMarks(data) {
         badRequestError(`Something wrong with the data. ${err.message}`)
       )
     } else {
+      console.log(err) // remvoe later
       logger.warn(`importStudentMarks(): ${err.message}`) // Always log cases for internal server error
       return toResult(null, internalServerError())
     }

@@ -534,7 +534,7 @@ const soft_old_courses = [
       {
         code: "CMP 441",
         credits: 3,
-        course_title: "Image Processing & Pattern Recognition",
+        course_title: "Image Processing and Pattern Recognition",
       },
       {
         code: "CMP 421",
@@ -545,7 +545,7 @@ const soft_old_courses = [
       {
         code: "",
         credits: 3,
-        course_title: "Elective II",
+        course_title: "Elective I",
       },
     ],
   },
