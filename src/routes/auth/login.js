@@ -4,7 +4,11 @@ const router = Router()
 const Joi = require("joi")
 const { errorResponse, responseStatusCode } = require("../../helper/error")
 const jwt = require("jsonwebtoken")
-const { checkLogin, changePassword } = require("../../db/users/user")
+const {
+  checkLogin,
+  changePassword,
+  resetUserPassword,
+} = require("../../db/users/user")
 const { escapeColon } = require("../../helper/utils")
 const { extractTokenDetails } = require("../../helper/extract-token")
 
@@ -139,4 +143,33 @@ function loginResponse(token, userDetails) {
   }
 }
 
+// schema for the password reset
+const pwResetSchema = Joi.object({
+  email: Joi.string().email().required(),
+})
+// reset Password Endpoint
+router.post("/reset", async function (req, res) {
+  // validate the request body
+  const err = pwResetSchema.validate(req.body).error
+
+  // incase of errors during schema validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+
+  // extract email for request payload
+  const email = req.body.email
+  const pwChange = await resetUserPassword(email)
+
+  if (pwChange.err !== null) {
+    res
+      .status(responseStatusCode.get(pwChange.err.error.title) || 400)
+      .json(pwChange.err)
+    return
+  }
+  // return response
+  res.status(200).send(pwChange.result)
+  return
+})
 module.exports = router

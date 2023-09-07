@@ -20,6 +20,12 @@ const {
   getCurrentBatch,
 } = require("../../db/programs/others")
 const { listAllCourses, getCourse } = require("../../db/programs/courses")
+const Joi = require("joi")
+const { escapeColon } = require("../../helper/utils")
+const {
+  getStudentMarks,
+  getStudentMarksByDetails,
+} = require("../../db/students/student-marks")
 
 //get all faculties
 router.get("/faculties", async function (req, res) {
@@ -47,7 +53,7 @@ router.get("/faculties/:id", async function (req, res) {
   const faculties = await getFacultyById(Number(id) || 0)
   if (faculties.err !== null) {
     res
-      .header("Cache-Control", "public, max-age=604800")
+      // .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(faculties.err.error.title) || 400)
       .json(faculties.err)
     return
@@ -68,7 +74,7 @@ router.get("/departments", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(depts.result)
   return
@@ -86,7 +92,7 @@ router.get("/departments/:id", async function (req, res) {
   const dept = await getDepartmentById(Number(id) || 0)
   if (dept.err !== null) {
     res
-      .header("Cache-Control", "public, max-age=604800")
+      // .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(dept.err.error.title) || 400)
       .json(dept.err)
     return
@@ -101,7 +107,7 @@ router.get("/programs", async function (req, res) {
   const programs = await getPrograms()
   if (programs.err !== null) {
     res
-      .header("Cache-Control", "public, max-age=604800")
+      // .header("Cache-Control", "public, max-age=604800")
       .status(responseStatusCode.get(programs.err.error.title) || 400)
       .json(programs.err)
     return
@@ -129,7 +135,7 @@ router.get("/programs/:id", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(program.result)
   return
@@ -152,7 +158,7 @@ router.get("/syllabus", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(syallbus.result)
   return
@@ -176,7 +182,7 @@ router.get("/syllabus/:id", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(syallbus.result)
   return
@@ -185,9 +191,9 @@ router.get("/syllabus/:id", async function (req, res) {
 //get all courses
 router.get("/courses", async function (req, res) {
   const programId = Number(req.query.program_id) || 0
-  const syallbusId = Number(req.query.syallbus_id) || 0
+  const syllabusId = Number(req.query.syllabus_id) || 0
 
-  const courses = await listAllCourses(programId, syallbusId)
+  const courses = await listAllCourses(programId, syllabusId)
 
   if (courses.err !== null) {
     res
@@ -197,7 +203,7 @@ router.get("/courses", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(courses.result)
   return
@@ -221,7 +227,7 @@ router.get("/courses/:id", async function (req, res) {
   }
 
   res
-    .header("Cache-Control", "public, max-age=604800")
+    // .header("Cache-Control", "public, max-age=604800")
     .status(200)
     .json(courses.result)
   return
@@ -280,6 +286,56 @@ router.get("/levels", async function (req, res) {
   }
 
   res.status(200).json(levels.result)
+  return
+})
+
+// schema for details
+const details = Joi.object({
+  email: Joi.string().email().required().trim(),
+  symbolNo: Joi.string()
+    .trim()
+    .min(8)
+    .max(20)
+    .required("symbol_no is required"),
+  puRegNo: Joi.string().trim().min(8).max(20).required("pu_reg is required"),
+  dob: Joi.string().min(10).max(10).required("dob is required"),
+})
+
+// get student marks
+router.get("/marks", async function (req, res) {
+  const email = req.query.email || ""
+  const symbolNo = req.query.symbol_no || ""
+  const puRegNo = req.query.pu_reg || ""
+  const dateOfBirth = req.query.dob || ""
+
+  const data = {
+    email: email,
+    symbolNo: symbolNo,
+    puRegNo: puRegNo,
+    dob: dateOfBirth,
+  }
+
+  const err = details.validate(data).error
+  if (err !== null) {
+    if (err !== undefined && err !== null) {
+      res.status(400).json(badRequestError(escapeColon(err.message)))
+      return
+    }
+  }
+
+  const marks = await getStudentMarksByDetails(
+    email,
+    dateOfBirth,
+    symbolNo,
+    puRegNo
+  )
+
+  if (marks.err !== null) {
+    res.status(responseStatusCode.get(marks.err.error.title)).json(marks.err)
+    return
+  }
+
+  res.status(200).json(marks.result)
   return
 })
 module.exports = router

@@ -19,6 +19,8 @@ const {
   getUserDetails,
   listAllUsers,
   deleteUser,
+  addAdminWithUser,
+  addExamHeadWithUser,
 } = require("../../db/users/user")
 const { updateProfile, getProfileDetails } = require("../../db/users/profile")
 const router = Router()
@@ -172,6 +174,7 @@ const updateProfileSchema = Joi.object({
   address: Joi.string().allow("", null).optional().default(""),
   email: Joi.string().allow("", null).optional().default(""),
   contactNo: Joi.string().allow("", null).optional().default(""),
+  password: Joi.string().allow("", null).optional().default(""),
 })
 // update a user's profile
 router.put("/:id/profile", async function (req, res) {
@@ -189,9 +192,16 @@ router.put("/:id/profile", async function (req, res) {
     return
   }
 
-  const { email, name, address, contactNo } = req.body
+  const { email, name, address, contactNo, password } = req.body
 
-  const profile = await updateProfile(userId, email, name, address, contactNo)
+  const profile = await updateProfile(
+    userId,
+    email,
+    name,
+    address,
+    contactNo,
+    password
+  )
 
   // check for errors
   if (profile.err !== null) {
@@ -249,6 +259,54 @@ router.delete("/:id", async function (req, res) {
 
   // return deleted user's  details
   res.status(200).json(user.result)
+  return
+})
+
+const createAdminSchema = Joi.object({
+  name: Joi.string().allow("", null).optional().default(""),
+  address: Joi.string().allow("", null).optional().default(""),
+  email: Joi.string().allow("", null).optional().default(""),
+  contactNo: Joi.string().allow("", null).optional().default(""),
+  password: Joi.string().required().trim().min(5).max(50),
+  role: Joi.string().required(),
+})
+// create an admin's account
+router.post("/", async function (req, res) {
+  const err = createAdminSchema.validate(req.body).error
+
+  if (err !== undefined && err !== null) {
+    res.status(400).json(badRequestError(escapeColon(err.message)))
+    return
+  }
+
+  const { email, name, address, contactNo, password, role } = req.body
+
+  let profile = {}
+  if (role.toLowerCase() === "admin") {
+    profile = await addAdminWithUser(email, password, name, address, contactNo)
+  } else if (role.toLowerCase() === "examhead") {
+    profile = await addExamHeadWithUser(
+      email,
+      password,
+      name,
+      address,
+      contactNo
+    )
+  } else {
+    res.status(400).json(badRequestError("Provide a valid role value."))
+    return
+  }
+
+  if (profile.err !== null) {
+    // check for errors
+    res
+      .status(responseStatusCode.get(profile.err.error.title) || 400)
+      .json(profile.err)
+    return
+  }
+
+  // return user profile details
+  res.status(201).json(profile.result)
   return
 })
 

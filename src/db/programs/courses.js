@@ -9,10 +9,13 @@ const {
   errorResponse,
   internalServerError,
   NotFoundError,
+  badRequestError,
 } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 const { getLatestBatch } = require("./others")
 
+// cache for markweightage
+const markWtArray = []
 /**
  * Add a markweightage entry
  * @param {Number} theory
@@ -554,8 +557,10 @@ async function listAllCourses(programId = 0, syllabusId = 0) {
         where: {
           ProgramCourses: {
             some: {
-              programId: programId > 0 ? programId : undefined,
-              syllabusId: syllabusId > 0 ? syllabusId : undefined,
+              AND: [
+                { programId: programId > 0 ? programId : undefined },
+                { syllabusId: syllabusId > 0 ? syllabusId : undefined },
+              ],
             },
           },
         },
@@ -657,6 +662,121 @@ async function getCourse(courseId = 0, courseCode = "") {
   }
 }
 
+/**
+ * Import multiple courses
+ */
+async function addMultipleCourses(records) {
+  try {
+    if (records === undefined || records === null) {
+      return toResult(null, badRequestError("Provide valid resources."))
+    }
+
+    const validQueries = []
+    const invalidQueries = []
+
+    // run one by one
+    for (const record of records) {
+      const markWtId = await findOrCreateMarkWeightage(
+        Number(record.theory),
+        Number(record.practical)
+      )
+
+      try {
+        const course = await db.course.upsert({
+          where: { code: record.code },
+          update: {
+            credit: Number(record.credit),
+            name: record.title,
+            code: record.code,
+            elective: record.elective.toLowerCase() === "yes" ? true : false,
+            project: record.project.toLowerCase() === "yes" ? true : false,
+            markWeightageId: markWtId.id,
+          },
+          create: {
+            credit: Number(record.credit),
+            name: record.title,
+            code: record.code,
+            elective: record.elective.toLowerCase() === "yes" ? true : false,
+            project: record.project.toLowerCase() === "yes" ? true : false,
+            markWeightageId: markWtId.id,
+          },
+        })
+
+        validQueries.push(course)
+      } catch (err) {
+        console.log("error : ", err.message)
+        invalidQueries.push(record)
+      }
+    }
+
+    return toResult(
+      { validQueries: validQueries, invalidQueries: invalidQueries },
+      null
+    )
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else {
+      logger.warn(`addMultipleCourses(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+// create or find markWeightage
+async function findOrCreateMarkWeightage(theory, practical) {
+  if (markWtArray.length === 0) {
+    const markWt = await db.markWeightage.findFirst({
+      where: { theory: theory, practical: practical },
+    })
+
+    if (markWt === undefined || markWt === null) {
+      const newMarkWt = await db.markWeightage.create({
+        data: { theory: theory, practical: practical },
+      })
+
+      // add to the cache
+      markWtArray.push(newMarkWt)
+      return newMarkWt
+    }
+    markWtArray.push(markWt)
+    return markWt
+  }
+
+  const markWtObj = markWtArray.filter(
+    (item) => item.practical === practical && item.theory === theory
+  )
+
+  if (markWtObj === undefined || markWtObj.length === 0) {
+    const markWt = await db.markWeightage.findFirst({
+      where: { theory: theory, practical: practical },
+    })
+
+    if (markWt === undefined || markWt === null) {
+      const newMarkWt = await db.markWeightage.create({
+        data: { theory: theory, practical: practical },
+      })
+
+      // add to the cache
+      markWtArray.push(newMarkWt)
+      return newMarkWt
+    }
+    markWtArray.push(markWt)
+    return markWt
+  }
+
+  return markWtObj[0]
+}
+
 module.exports = {
   addMarkWeightage,
   deleteMarkWeightage,
@@ -671,4 +791,5 @@ module.exports = {
   listAllCourses,
   getCourse,
   addMultipleCourseToSyllabus,
+  addMultipleCourses,
 }

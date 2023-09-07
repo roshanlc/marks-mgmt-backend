@@ -12,7 +12,11 @@ const {
   programSemesters,
   programSyllabus,
 } = require("./programs")
-const { markWeightage, old_comp_courses } = require("./courses")
+const {
+  markWeightage,
+  old_comp_courses,
+  soft_old_courses,
+} = require("./courses")
 const { admins, students, teachers } = require("./users.js")
 const {
   addStudentWithUser,
@@ -225,6 +229,7 @@ async function seedCourses() {
 
     const markWeightList = new WeakMap()
 
+    // seed old syllabus of computer engg
     for (const semester of old_comp_courses) {
       for (const course of semester.courses) {
         try {
@@ -264,6 +269,73 @@ async function seedCourses() {
               programId: compProgramId.id,
               semesterId: semester.semester,
               syllabusId: oldSyllabusId.id,
+            },
+          })
+        } catch (err) {
+          console.log(err)
+          logger.warn(`Something went wrong: ${err.message}`)
+        }
+      }
+    }
+
+    const softProgramId = await db.program.findFirst({
+      where: { name: "Software Engineering", level: { name: "Bachelor" } },
+    })
+
+    const oldSoftSyllabusId = await db.syllabus.findFirst({
+      where: { name: "Software Old Syllabus" },
+    })
+
+    // seed old syllabus of soft engg
+
+    for (const semester of soft_old_courses) {
+      for (const course of semester.courses) {
+        try {
+          const markWeightage = { theory: 30, practical: 20 }
+
+          const markWtId =
+            markWeightList.get(markWeightage) ||
+            (await db.markWeightage.findFirstOrThrow({
+              where: {
+                AND: [
+                  {
+                    theory: markWeightage.theory,
+                    practical: markWeightage.practical,
+                  },
+                ],
+              },
+            }))
+
+          // set the data to map, so reduce fetching from db
+          markWeightList.set(markWeightage, markWtId)
+
+          // add courses
+          const courseDetails = await db.course.upsert({
+            where: { code: course.code },
+            update: {
+              credit: course.credits,
+              name: course.course_title,
+              code: course.code || undefined,
+              elective: course.elective || false,
+              project: course.project || false,
+              markWeightage: { connect: { id: markWtId.id } },
+            },
+            create: {
+              credit: course.credits,
+              name: course.course_title,
+              code: course.code || undefined,
+              elective: course.elective || false,
+              project: course.project || false,
+              markWeightage: { connect: { id: markWtId.id } },
+            },
+          })
+
+          await db.programCourses.create({
+            data: {
+              courseId: courseDetails.id,
+              programId: softProgramId.id,
+              semesterId: semester.semester,
+              syllabusId: oldSoftSyllabusId.id,
             },
           })
         } catch (err) {

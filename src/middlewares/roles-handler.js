@@ -68,5 +68,31 @@ function teacherRoleHandler(req, res, next) {
   // Pass the request to next handler
   next()
 }
+// Check if user has the role of a admin or examHead
+function adminorExamHeadRoleHandler(req, res, next) {
+  const tokenDetails = extractTokenDetails(req)
+  const roles = tokenDetails.UserRoles
 
-module.exports = { teacherRoleHandler, studentRoleHandler, adminRoleHandler }
+  let hasRole = false
+  for (const roleObj of roles) {
+    if (roleObj.role.name === "admin" || roleObj.role.name === "examHead") {
+      hasRole = true
+      break
+    }
+  }
+
+  // Incase the user is not an admin, return forbidden error
+  if (!hasRole) {
+    res.status(403).json(forbiddenError())
+    return
+  }
+  // Pass the request to next handler
+  next()
+}
+
+module.exports = {
+  teacherRoleHandler,
+  studentRoleHandler,
+  adminRoleHandler,
+  adminorExamHeadRoleHandler,
+}

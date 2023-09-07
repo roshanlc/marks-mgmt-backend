@@ -13,6 +13,8 @@ const { authenticationError, NotFoundError } = require("../../helper/error")
 const { assignRoleToUser } = require("./roles")
 const { createMarksForSemesters } = require("../students/student-marks")
 const { getLatestBatch } = require("../programs/others")
+const generator = require("generate-password")
+const { sendMail } = require("../../helper/mailer")
 
 /**
  * Get user details
@@ -513,6 +515,78 @@ async function addAdminWithUser(
 }
 
 /**
+ * Creates exam head entry along with corresponding user entry
+ * @returns
+ */
+async function addExamHeadWithUser(
+  email,
+  password,
+  name,
+  address = "",
+  contactNo = "",
+  activated = true,
+  expired = false
+) {
+  try {
+    // TODO: check for invalid input
+
+    // create as a transaction
+    const user = await addUser(
+      email,
+      password,
+      name,
+      address,
+      contactNo,
+      activated,
+      expired
+    )
+    if (user.err !== null) {
+      return user
+    }
+
+    const admin = await db.examHead.create({
+      data: {
+        userId: user.result.id,
+      },
+    })
+
+    const roleAssign = await assignRoleToUser(user.result.id, "examHead")
+    if (roleAssign.err !== null) {
+      return roleAssign
+    }
+
+    // valid user creation operation
+    if (user.result.password) {
+      delete user.result.password
+    }
+
+    admin.user = user.result
+    admin.user.UserRoles = roleAssign.result
+    return toResult(admin, null)
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`addExamHeadWithUser(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+/**
  * Change password of a user
  * @param {Number} userId  - id of the user
  * @param {String} oldPassword - old password of a user
@@ -628,7 +702,7 @@ async function deleteUser(userID) {
             semester: true,
           },
         },
-        ProgramHead: true,
+        // ProgramHead: true,
         Teacher: true,
       },
     })
@@ -663,6 +737,74 @@ async function deleteUser(userID) {
   }
 }
 
+/**
+ * Reset user password with random password and the random password is emailed to user
+ * @param {*} userId - id of the user
+ * @returns
+ */
+async function resetUserPassword(email) {
+  try {
+    const generated = generator.generate({
+      length: 20,
+      numbers: true,
+    })
+    const newHash = hashPassword(generated)
+
+    const userDetails = await db.user.update({
+      where: { email: email },
+      data: { password: newHash },
+    })
+
+    // send mail to user
+    sendMail(
+      userDetails.email,
+      "Your new password for IMMS account",
+      generateEmailText(generated)
+    )
+    // return user details by id
+    return toResult(
+      {
+        msg: "The user password has been reset and emailed to user. Please check the email.",
+      },
+      null
+    )
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2025"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Not Found",
+          "Please provide an existent user email account."
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something went wrong with request. ${err.message}`)
+      )
+    } else {
+      logger.warn(`resetUserPassword(): ${err.message}`)
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
+// generate text for email reset
+function generateEmailText(generatedPw) {
+  return `
+  Dear user,
+  
+  Your password has been reset and the current password is ${generatedPw}.
+  
+  Please login to your account and change the password immediately.
+  
+  Regards,
+  IMMS team.`
+}
+
 module.exports = {
   checkLogin,
   getUserDetails,
@@ -676,4 +818,6 @@ module.exports = {
   changePassword,
   listAllUsers,
   deleteUser,
+  addExamHeadWithUser,
+  resetUserPassword,
 }

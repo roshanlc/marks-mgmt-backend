@@ -151,16 +151,16 @@ async function assignRoleToUser(userId, roleName = "", roleId = 0) {
         // Insert into ExamHead table
         await db.examHead.create({ data: { userId: userId } })
       }
-    } else if (role === "programhead") {
-      const programHead = await db.programHead.findFirst({
-        where: { userId: userId },
-      })
-      if (programHead === null) {
-        // Insert into ProgramHead table
-        await db.programHead.create({
-          data: { user: { connect: { id: userId } } },
-        })
-      }
+      // } else if (role === "programhead") {
+      //   const programHead = await db.programHead.findFirst({
+      //     where: { userId: userId },
+      //   })
+      // if (programHead === null) {
+      //   // Insert into ProgramHead table
+      //   await db.programHead.create({
+      //     data: { user: { connect: { id: userId } } },
+      //   })
+      // }
     }
 
     return toResult({ role: roleAssigned }, null)
@@ -274,14 +274,15 @@ async function removeRoleFromUser(userId, roleId) {
       // delete from ExamHead table
 
       await db.examHead.delete({ where: { userId: userId } })
-    } else if (roleName === "programhead") {
-      // delete from ProgramHead table
-
-      const programHeadId = await db.programHead.findFirstOrThrow({
-        where: { userId: userId },
-      })
-      await db.programHead.delete({ where: { id: programHeadId.id } })
     }
+    // else if (roleName === "programhead") {
+    //   // delete from ProgramHead table
+
+    //   const programHeadId = await db.programHead.findFirstOrThrow({
+    //     where: { userId: userId },
+    //   })
+    //   await db.programHead.delete({ where: { id: programHeadId.id } })
+    // }
 
     return toResult({ role: roleDeletion }, null)
   } catch (err) {

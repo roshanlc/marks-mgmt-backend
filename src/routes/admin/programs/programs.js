@@ -24,7 +24,10 @@ const {
   getBatchById,
   deleteBatchById,
 } = require("../../../db/programs/others")
-const { upgradeBatch } = require("../../../db/programs/batch-upgrade")
+const {
+  upgradeBatch,
+  currentBatchMarksToggle,
+} = require("../../../db/programs/batch-upgrade")
 
 // schema for faculty
 const facultySchema = Joi.object({
@@ -265,6 +268,7 @@ router.post("/level", async function (req, res) {
 const batchSchema = Joi.object({
   year: Joi.number().required().positive().min(2000),
   season: Joi.string().required().valid("FALL", "WINTER", "SPRING", "SUMMER"),
+  used: Joi.boolean().required(),
 })
 
 // create a new batch
@@ -277,8 +281,8 @@ router.post("/batch", async function (req, res) {
     return
   }
 
-  const { year, season } = req.body
-  const batch = await addBatch(year, season)
+  const { year, season, used } = req.body
+  const batch = await addBatch(year, season, false, used)
 
   if (batch.err !== null) {
     res.status(responseStatusCode.get(batch.err.error.title)).json(batch.err)
@@ -333,6 +337,36 @@ router.post("/batch/upgrade", async function (req, res) {
   }
 
   res.status(201).json(upgradeBatchDetails.result)
+  return
+})
+
+// schema for batch upgrade
+const marksToggleSchema = Joi.object({
+  marksCollect: Joi.boolean().required("marksCollect is required"),
+})
+
+// enable or disable marks collection for current batch
+router.put("/batch/current", async function (req, res) {
+  const err = marksToggleSchema.validate(req.body).error
+
+  // incase of errors during body validation
+  if (err !== undefined && err !== null) {
+    res.status(400).json(errorResponse("Bad Request", escapeColon(err.message)))
+    return
+  }
+  const toggle = req.body.marksCollect || false
+
+  const marksToggle = await currentBatchMarksToggle(toggle)
+
+  // in case of error
+  if (marksToggle.err !== null) {
+    res
+      .status(responseStatusCode.get(marksToggle.err.error.title))
+      .json(marksToggle.err)
+    return
+  }
+
+  res.status(200).json(marksToggle.result)
   return
 })
 

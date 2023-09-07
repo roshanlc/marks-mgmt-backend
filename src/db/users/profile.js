@@ -6,6 +6,7 @@ const { errorResponse, internalServerError } = require("../../helper/error")
 const { toResult } = require("../../helper/result")
 const { getUserDetails } = require("./user")
 const { getAStudentDetails } = require("../students/students")
+const { hashPassword } = require("../../helper/password")
 
 /**
  * Returns profile details
@@ -29,7 +30,7 @@ async function getProfileDetails(userId) {
             semester: true,
           },
         },
-        ProgramHead: true,
+        // ProgramHead: true,
         Teacher: true,
       },
     })
@@ -83,9 +84,15 @@ async function updateProfile(
   email = "",
   name = "",
   address = "",
-  contactNo = ""
+  contactNo = "",
+  password = ""
 ) {
   try {
+    // password hash
+    let passwordHash = ""
+    if (password !== "") {
+      passwordHash = hashPassword(password)
+    }
     const profile = await db.user.update({
       where: { id: userId },
       data: {
@@ -93,6 +100,7 @@ async function updateProfile(
         name: name === "" ? undefined : name,
         address: address === "" ? undefined : address,
         contactNo: contactNo === "" ? undefined : contactNo,
+        password: passwordHash === "" ? undefined : passwordHash,
       },
       include: {
         UserRoles: { include: { role: true } },
@@ -108,7 +116,7 @@ async function updateProfile(
             semester: true,
           },
         },
-        ProgramHead: true,
+        // ProgramHead: true,
         Teacher: true,
       },
     })
