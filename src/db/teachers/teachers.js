@@ -1,8 +1,14 @@
 // Db actions related to user model
 const { PrismaClient, Prisma } = require("@prisma/client")
 const { toResult } = require("../../helper/result")
-const { errorResponse, internalServerError } = require("../../helper/error")
+const {
+  errorResponse,
+  internalServerError,
+  badRequestError,
+} = require("../../helper/error")
 const logger = require("../../helper/logger")
+const { hashPassword } = require("../../helper/password")
+const { addTeacherWithUser } = require("../users/user")
 const db = new PrismaClient()
 
 /**
@@ -223,10 +229,68 @@ async function deleteTeacher(teacherId) {
   }
 }
 
+/**
+ * Import data in bulk
+ * @param {*} data
+ * @returns
+ */
+async function importTeachers(data) {
+  try {
+    let validQueries = []
+    let invalidQueries = []
+
+    for (const record of data) {
+      const hash = hashPassword(record.contactNo)
+      const teacher = await addTeacherWithUser(
+        record.email,
+        hash,
+        record.name,
+        record.address,
+        record.contactNo,
+        true,
+        false
+      )
+
+      if (teacher.err !== null) {
+        console.log(teacher.err)
+        invalidQueries.push(record)
+      } else {
+        validQueries.push(teacher.result)
+      }
+    }
+    return toResult(
+      { validQueries: validQueries, invalidQueries: invalidQueries },
+      null
+    )
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return toResult(
+        null,
+        errorResponse(
+          "Conflict",
+          `Resource already exists. Please update method to update the resource.`
+        )
+      )
+    } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      return toResult(
+        null,
+        badRequestError(`Something wrong with the data. ${err.message}`)
+      )
+    } else {
+      logger.warn(`importStudents(): ${err.message}`) // Always log cases for internal server error
+      return toResult(null, internalServerError())
+    }
+  }
+}
+
 module.exports = {
   listAllTeachers,
   listTeachersBy,
   getATeacherDetails,
   getAllTeachersCount,
   deleteTeacher,
+  importTeachers,
 }

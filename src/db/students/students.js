@@ -487,7 +487,7 @@ async function importStudents(data) {
         hash,
         record.name,
         record.address,
-        record.address,
+        record.contactNo,
         true,
         false,
         record.symbolNo,
