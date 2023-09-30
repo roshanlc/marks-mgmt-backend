@@ -1,11 +1,6 @@
-# INTERNAL EXAMINATION RECORDS - BACKEND
+# MARKS MANAGEMENT SYSTEM - BACKEND
 
-The backend server for the internal exmaination records management system.
-
-## _Note: Donot merge with main. All development works should be merged to this `development` branch_
-
-> This is the development branch. Create new branches from this one and merge to this after completion.
-> `main` branch is used for pushing codes to hosting ,i.e `production`
+The backend server for the marks management system which is aimed to be used by universites and other educational institutes.
 
 ### Necessary Tools
 
@@ -116,11 +111,6 @@ return
 4. Explicity set request body `content-type`
 5. A database helper function should return with `toResult()` function
 
-## API Documentation (Donot worry about this)
+## TODO
 
-- The swagger ui is available from `/docs` endpoint
-
-- We will be using Postman for openapi specs generation
-- Save the specs to `/src/swagger/swagger-output.json`
-- Use the specs to generate swagger ui
-  _Note: However provide enough comments about endpoint in source files as well_
+- [ ] Add endpoint API documentation (use swagger)
