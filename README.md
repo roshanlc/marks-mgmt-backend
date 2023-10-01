@@ -2,6 +2,16 @@
 
 The backend server for the marks management system which is aimed to be used by universites and other educational institutes.
 
+### Features
+
+1. Supports Multiple User Type (Admin, Teacher, Student, ExamHead)
+2. Supports Bulk Data Import (csv)
+3. Student can view their marks, syllabus and other details.
+4. Teacher can add, view marks for their courses
+5. Admin can overview overall processes of the system.
+6. Supports multiple academic divisions: faculties, departments, programs and syllabus
+7. Supports more: Semester upgrade, marks mgmt and export, role mgmt, course mgmt,....
+
 ### Necessary Tools
 
 Make sure you have the following tools installed on your machine
